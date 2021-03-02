@@ -1,7 +1,7 @@
 """
 
 
-Files to be kept in same folder while excution of this file.
+Files to be kept in same folder while execution of this file.
 1. face_detector.py
 2. face_landmarks.py
 3. frozen_inference_graph.pb
