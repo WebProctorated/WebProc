@@ -50,8 +50,8 @@
                     video.srcObject = stream;
                     video.play();
                 })
-                .catch(function (err0r) {
-                    console.log(err0r)
+                .catch(function (error) {
+                    console.log(error)
                     console.log("Something went wrong!");
                 });
             }
@@ -60,7 +60,7 @@
             let dst = new cv.Mat(video.height, video.width, cv.CV_8UC1);
             let cap = new cv.VideoCapture(video);
         
-            const FPS = 22;
+            const FPS = 2;
         
             setInterval(() => {
                 cap.read(src);
@@ -69,14 +69,16 @@
                 var data = document.getElementById("canvasOutput").toDataURL(type);
                 data = data.replace('data:' + type + ';base64,', ''); //split off junk at the beginning
                 socket.emit('image', data);
-            }, 10000/FPS);
+                console.log("frame sent");
+            }, 1000/FPS);
         
             socket.on('error', function(msg){
+                console.log(msg);
                 message = msg;
                 var el = document.getElementById('messages');
                 el.className = 'warning';
                 el.innerText = message;
-                setInterval(()=>{
+                setTimeout(()=>{
                     el.className = ""
                     el.innerText = ""
                 },1000)

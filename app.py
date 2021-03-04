@@ -1,17 +1,26 @@
-from flask import Flask, render_template
-from flask_socketio import SocketIO, emit
-from proctoring.phone_detection import phone_detection
-from engineio.payload import Payload
-import io
-import base64
-from PIL import Image
+import time
+from absl import app, logging
 import cv2
 import numpy as np
-import imutils
+import tensorflow as tf
+from proctoring.yolov3 import (
+    YoloV3
+)
 
+from flask import Flask, request, Response, jsonify, send_from_directory, abort, render_template
+from flask_socketio import SocketIO, emit
+from engineio.payload import Payload
+
+# customize your API through the following parameters
+classes_path = './data/labels/coco.names'
+weights_path = './weights/yolov3.tf'
+
+
+yolo = YoloV3(classes=num_classes)
+
+# Initialize Flask application
 app = Flask(__name__)
-Payload.max_decode_packets = 500
-# socketio = SocketIO(async_mode='gevent', ping_timeout=PING_TIMEOUT, ping_interval=PING_INTERVAL)
+Payload.max_decode_packets = 10
 socketio = SocketIO(app)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
@@ -28,24 +37,11 @@ def image(data_image):
     b = io.BytesIO(base64.b64decode(data_image))
     pimg = Image.open(b)
 
-    print(pimg.size)
     ## converting RGB to BGR, as opencv standards
     frame = cv2.cvtColor(np.array(pimg), cv2.COLOR_RGB2BGR)
-    if phone_detection(frame) == True:
-        emit('error','You are using smartphone')
+    boxes, scores, classes, nums = yolo(frame)
 
-    # Process the image frame
-    # frame = imutils.resize(frame, width=700)
-    # frame = cv2.flip(frame, 1)
-    # imgencode = cv2.imencode('.jpg', frame)[1]
-
-    # base64 encode
-    # stringData = base64.b64encode(imgencode).decode('utf-8')
-    # b64_src = 'data:image/jpg;base64,'
-    # stringData = b64_src + stringData
-
-    # emit the frame back
-    # emit('response_back', stringData)
+    print(boxes,scores,classes,nums)
 
 if __name__ == "__main__":
 	socketio.run(app,debug = True)

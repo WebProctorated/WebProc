@@ -13,14 +13,15 @@ net.setInputMean((127.5, 127.5, 127.5))
 net.setInputSwapRB(True)
 
 def phone_detection(frame):
-    print(frame.shape)
+    print('phone_detection: {}'.format(frame.shape))
     classIds, confs, bbox = net.detect(frame,confThreshold=0.45)
     # print(classIds,confs,bbox)
 
     if len(classIds) != 0:
         for classId, confidence,box in zip(classIds.flatten(),confs.flatten(),bbox):
-            print(classId)
-            if classId == 77 and confidence >= 0:
+            print('classId: {}, confidence: {}'.format(classId,confidence))
+            # if classId == 77 and confidence >= 0:
+            if classId == 77:
                 print("Yes")
                 return True
 
