@@ -1,0 +1,18 @@
+,Head_orientation_vertical,Head_orientation_horizontal,Mouth_open,Phone_detected,Head_count,Head_angles_v,Head_angles_h
+0, , , , ,1,-11,-30
+1, , , , ,1,11,-26
+2, , , , ,1,7,-37
+3, , , , ,1,8,-32
+4, , , , ,1,10,-31
+5, , , , ,1,17,-26
+6, , , , ,1,6,-38
+7, , , , ,1,6,-41
+8, , , , ,1,-12,36
+9, , ,Mouth open, ,1,-7,27
+10, , ,Mouth open, ,0,42,12
+11, , , , ,0,0,-36
+12, , , , ,0,5,-39
+13, , , , ,1,10,-30
+14, , ,Mouth open, ,1,9,-28
+15, , , , ,1,17,-21
+16, , , , ,1,11,-27

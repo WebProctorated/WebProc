@@ -1,7 +1,7 @@
 """
 
 
-Files to be kept in same folder while execution of this file.
+Files to be kept in same folder while excution of this file.
 1. face_detector.py
 2. face_landmarks.py
 3. frozen_inference_graph.pb
@@ -15,6 +15,8 @@ Files to be kept in same folder while execution of this file.
 import cv2
 import numpy as np
 import math
+import pandas as pd
+import time
 from face_detector import get_face_detector, find_faces
 from face_landmarks import get_landmark_model, detect_marks, draw_marks
 
@@ -146,14 +148,16 @@ net.setInputSwapRB(True)
 
 
 # Head orientation
-L_head_ori = list()   
-L_head_val = list() 
+L_head_ori1 = list()   
+L_head_ori2 = list()   
+L_head_val1 = list() 
+L_head_val2 = list() 
 face_model = get_face_detector()
 landmark_model = get_landmark_model()
 
 # Number of peoples 
 L_counts = list()
-fac = cv2.CascadeClassifier('D:/image+video/haarcascade_frontalface_default.xml')
+fac = cv2.CascadeClassifier('./haarcascade_frontalface_default.xml')
 
 
 # Mouth orientation 
@@ -163,8 +167,9 @@ d_outer = [0]*5
 inner_points = [[61, 67], [62, 66], [63, 65]]
 d_inner = [0]*3
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
 ret, img = cap.read()
+# cv2.imshow('img',img)
 size = img.shape
 font = cv2.FONT_HERSHEY_SIMPLEX 
 
@@ -231,7 +236,7 @@ while True:
                             cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
                 cv2.putText(img,str(round(confidence*100,2)),(box[0]+200,box[1]+30),
                             cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
-                L_phone.append("Phone found")
+                L_phone.append(confidence*100)
             else:
                 L_phone.append(" ")
                 
@@ -305,31 +310,32 @@ while True:
             
         if ang1 >= 48:
             print('Head down')
-            L_head_ori.append("Head down")
+            L_head_ori1.append("Head down")
             #cv2.putText(img, 'Head down', (30, 30), font, 2, (255, 255, 128), 3)
         elif ang1 <= -48:
             print('Head up')
-            L_head_ori.append("Head up")
+            L_head_ori1.append("Head up")
             #cv2.putText(img, 'Head up', (30, 30), font, 2, (255, 255, 128), 3)
             
         else: 
-            L_head_ori.append(" ")
-        L_head_val.append(ang1)
+            L_head_ori1.append(" ")
+        L_head_val1.append(ang1)
         if ang2 >= 48:
             print('Head right')
-            L_head_ori.append("Head right")
+            L_head_ori2.append("Head right")
                 #cv2.putText(img, 'Head right', (90, 30), font, 2, (255, 255, 128), 3)
         elif ang2 <= -48:
             print('Head left')
-            L_head_ori.append("Head left")
+            L_head_ori2.append("Head left")
                 
                 #cv2.putText(img, 'Head left', (90, 30), font, 2, (255, 255, 128), 3)
         else: 
-            L_head_ori.append(" ")
-        L_head_val.append(ang2)
+            L_head_ori2.append(" ")
+        L_head_val2.append(ang2)
             #cv2.putText(img, str(ang1), tuple(p1), font, 2, (128, 255, 255), 3)
             #cv2.putText(img, str(ang2), tuple(x1), font, 2, (255, 255, 128), 3)
     cv2.imshow('img', img)
+    time.sleep(0.2)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
@@ -338,8 +344,33 @@ cap.release()
 
 # List will have data points for head orientation and mouth opening 
 
-print(L_head_ori)
-print(L_mouth)
-print(L_phone)
-print(L_counts)
-print(L_head_val)
+"""
+print(len(L_head_ori1))
+print(len(L_head_ori2))
+print(len(L_mouth))
+print(len(L_phone))
+print(len(L_counts))
+print(len(L_head_val1))
+print(len(L_head_val2))
+"""
+
+X = min(len(L_head_val1), len(L_mouth), len(L_phone))
+
+L_phone = L_phone[:X]
+L_counts = L_counts[:X]
+L_head_ori1 = L_head_ori1[:X]
+L_head_ori2 = L_head_ori2[:X]
+L_head_val1 = L_head_val1[:X]
+L_head_val2 = L_head_val2[:X]
+
+data = {"Head_orientation_vertical" : L_head_ori1,
+        "Head_orientation_horizontal" : L_head_ori2,
+        "Mouth_open" : L_mouth ,
+        "Phone_detected" : L_phone,
+        "Head_count" : L_counts,
+        "Head_angles_v" : L_head_val1,
+        "Head_angles_h" : L_head_val2 
+        }
+
+df = pd.DataFrame(data)
+df.to_csv("result.csv")
