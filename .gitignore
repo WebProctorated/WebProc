@@ -1,0 +1,4 @@
+.vscode/settings.json
+__pycache__/face_detector.cpython-38.pyc
+__pycache__/model.cpython-38.pyc
+__pycache__/face_landmarks.cpython-38.pyc
