@@ -5,7 +5,8 @@ import pandas as pd
 import math
 from face_detector import get_face_detector, find_faces
 from face_landmarks import get_landmark_model, detect_marks,draw_marks
-from model import final_predictor
+# from model import final_predictor
+from ann_predict import final_predictor
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
@@ -53,14 +54,15 @@ def head_pose_points(img, rotation_vector, translation_vector, camera_matrix):
 
 q = 1
 xvals = []
-y1vals = []
-y2vals = []
-y3vals = []
-y4vals = []
-y5vals = []
-y6vals = []
-y7vals = []
-y8vals = []
+yvals = []
+# y1vals = []
+# y2vals = []
+# y3vals = []
+# y4vals = []
+# y5vals = []
+# y6vals = []
+# y7vals = []
+# y8vals = []
 
 proceed = False
 face_model = get_face_detector()
@@ -75,16 +77,19 @@ inner_points = [[61, 67], [62, 66], [63, 65]]
 d_inner = [0]*3
 
 def animate(s,q):
-    # plt.cla()
     xvals.append(q)
-    y1vals.append(s[0][0])
-    y2vals.append(s[0][1])
-    y3vals.append(s[0][2])
-    y4vals.append(s[0][3])
-    y5vals.append(s[0][4])
-    y6vals.append(s[0][5])
-    y7vals.append(s[0][6])
-    y8vals.append(s[0][7])
+    yvals.append(s)
+    # plt.cla()
+    # xvals.append(q)
+    # y1vals.append(s[0][0])
+    # y2vals.append(s[0][1])
+    # y3vals.append(s[0][2])
+    # y4vals.append(s[0][3])
+    # y5vals.append(s[0][4])
+    # y6vals.append(s[0][5])
+    # y7vals.append(s[0][6])
+    # y8vals.append(s[0][7])
+
     # plt.draw()
     # plt.pause(0.1)
 
@@ -224,15 +229,18 @@ if proceed == True:
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
-    plt.plot(xvals,y1vals,label="class1")
-    plt.plot(xvals,y2vals,label="class2")
-    plt.plot(xvals,y3vals,label="class3")
-    plt.plot(xvals,y4vals,label="class4")
-    plt.plot(xvals,y5vals,label="class5")
-    plt.plot(xvals,y6vals,label="class6")
-    plt.plot(xvals,y7vals,label="class7")
-    plt.plot(xvals,y8vals,label="class8")
-    plt.legend()
+    # plt.plot(xvals,y1vals,label="no cheat")
+    # plt.plot(xvals,y2vals,label="head down")
+    # plt.plot(xvals,y3vals,label="head left and talking")
+    # plt.plot(xvals,y4vals,label="head right and talking")
+    # plt.plot(xvals,y5vals,label="talking")
+    # plt.plot(xvals,y6vals,label="phone + head orientation + talking")
+    # plt.plot(xvals,y7vals,label="no person")
+    # plt.plot(xvals,y8vals,label="more than 1 person")
+    # plt.legend()
+    plt.plot(xvals,yvals)
+    plt.yticks(np.arange(8),['no cheat',"head down","head left and talking",'head right and talking','talking','phone + head orientation + talking','no person','more than 1 person'])
+
     plt.show()
 
     cv2.destroyAllWindows()
