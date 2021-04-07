@@ -36,6 +36,18 @@ class Proctor:
         self.q = 1
         self.xvals = []
         self.yvals = []
+        self.base = 0
+        self.STATE = 'CHECK_ROOM_INTENSITY'
+        #capturing video
+        self.video = cv2.VideoCapture(0)
+    
+    def __del__(self):
+        #releasing camera
+        self.video.release()
+
+    def get_frame(self):
+        ret, frame = self.video.read()
+        return frame
 
     def animate(self, s, q):
         self.xvals.append(q)
@@ -76,7 +88,7 @@ class Proctor:
         front_size = img.shape[1]
         front_depth = front_size*2
         val = [rear_size, rear_depth, front_size, front_depth]
-        point_2d = get_2d_points(img, rotation_vector,
+        point_2d = self.get_2d_points(img, rotation_vector,
                                  translation_vector, camera_matrix, val)
         y = (point_2d[5] + point_2d[8])//2
         x = point_2d[2]
@@ -85,6 +97,7 @@ class Proctor:
 
     def check_for_room_light_intensity(self, frame):
         rects = find_faces(frame, self.face_model)
+        print(rects)
         if len(rects) == 0:
             return False
         return True
@@ -92,14 +105,15 @@ class Proctor:
     def calibrate_user_lip_distance(self, frame):
         rects = find_faces(frame, self.face_model)
         self.size = frame.shape
-        for rect in rects:
-            shapes = detect_marks(frame, self.landmark_model, rect)
-        for i in range(100):
-            for i, (p1, p2) in enumerate(self.outer_points):
-                self.d_outer[i] += shapes[p2][1] - shapes[p1][1]
-            for i, (p1, p2) in enumerate(self.inner_points):
-                self.d_inner[i] += shapes[p2][1] - shapes[p1][1]
-        self.after_math()
+        if len(rects) != 0:
+            for rect in rects:
+                shapes = detect_marks(frame, self.landmark_model, rect)
+            for i in range(100):
+                for i, (p1, p2) in enumerate(self.outer_points):
+                    self.d_outer[i] += shapes[p2][1] - shapes[p1][1]
+                for i, (p1, p2) in enumerate(self.inner_points):
+                    self.d_inner[i] += shapes[p2][1] - shapes[p1][1]
+            self.after_math()
         return
 
     def calibrating_user_orientation(self, frame):
@@ -108,7 +122,8 @@ class Proctor:
     def check_calibrated_user_orient(self):
         # after calibrating_user_orientation got run for 15 sec
         self.base = np.mean(self.orient)
-        if self.base > 0.80:
+        print('base: ',self.base)
+        if self.base > 0.90:
             return False  # i.e. user hasn't been calibrated successfully
         return True
 
@@ -149,10 +164,10 @@ class Proctor:
             p1 = (int(image_points[0][0]), int(image_points[0][1]))
             p2 = (int(nose_end_point2D[0][0][0]),
                   int(nose_end_point2D[0][0][1]))
-            x1, x2 = head_pose_points(
-                img, rotation_vector, translation_vector, self.camera_matrix)
+            x1, x2 = self.head_pose_points(
+                frame, rotation_vector, translation_vector, self.camera_matrix)
 
-            classIds, confs, bbox = self.net.detect(img, confThreshold=thres)
+            classIds, confs, bbox = self.net.detect(frame, confThreshold=self.thres)
             # print(classIds,confs,bbox)
             if len(classIds) != 0:
                 for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
@@ -191,9 +206,10 @@ class Proctor:
                 np.array([nfaces, ang1, ang2, cnt_outer, cnt_inner, c]).reshape(1, -1))
             # print(x)
         #cv2.putText(img, 'Orient', (30, 30), font,1, (0, 255, 255), 2)
+        
         s = final_predictor(x)
         if c == 0:
-            che = s-base
+            che = s-self.base
             print(che)
             self.animate(che, self.q)
             self.q = self.q+1
