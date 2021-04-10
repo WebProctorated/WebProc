@@ -1,6 +1,7 @@
 from flask import Flask, render_template,Response,request,session
-# from flask_socketio import SocketIO, emit
-# from engineio.payload import Payload
+from flask_socketio import SocketIO, emit, disconnect
+from engineio.payload import Payload
+from io import StringIO
 import io
 import base64
 from PIL import Image
@@ -17,9 +18,9 @@ from threading import Thread
 import sqlite3
 
 app = Flask(__name__)
-# Payload.max_decode_packets = 6
-# socketio = SocketIO(async_mode='gevent', ping_timeout=PING_TIMEOUT, ping_interval=PING_INTERVAL)
-# socketio = SocketIO(app, cors_allowed_origins="*")
+
+Payload.max_decode_packets = 500
+socketio = SocketIO(app, cors_allowed_origins="*")
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.secret_key = 'super secret key'
@@ -46,90 +47,63 @@ def login():
             return Response(), 201 #success
     return Response(), 400 # server error
 
-@app.route('/calibration',methods=['POST'])
-@cross_origin()
-def calibration():
-    global frame, stop_thread, msg
-     # start the capture thread: reads frames from the camera (non-stop) and stores the result in img
-    t = Thread(target=checks, args=(proctor,), daemon=True) # a deamon thread is killed when the application exits
-    t.start()
-    if len(msg) == 0:
-        return Response(stream(proctor),status=201,
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-    else:
-        error = msg
-        msg = []
-        return Response(statusText=error[0],status=404)
+@socketio.on('connect', namespace='/test')
+def test_connect():
+    app.logger.info("client connected")
 
-def checks(camera):
-    global frame, stop_thread, msg, proctor
-    while True:
-        if frame is None:
-            #get camera frame
-            frame = camera.get_frame()
+@socketio.on('input image', namespace='/test')
+def calibration(data_image):
+    data_image = data_image.split(",")[1]
+    sbuf = StringIO()
+    sbuf.write(data_image)
 
-        if proctor.STATE == 'CHECK_ROOM_INTENSITY':
-            print('checking room intensity')
-            # check is sitting in proper lighting or not
-            if proctor.check_for_room_light_intensity(frame) == True:
-                print('frame intensity good')
-                # make a url instead which will listen to user button click on Proceed and start the test
-                proctor.STATE = 'MEASURE_LIP_DIST'
-                # also set some flag in database which will tell that user is already passed this check
-                # emit('goodToGo', 'Perfect!!')
-            else:
-                msg.append('Increase Room Light')
-                print('frame intensity bad')
-                # emit('error', 'Improve Room Light!!')
+    # decode and convert into image
+    b = io.BytesIO(base64.b64decode(data_image))
+    pimg = Image.open(b)
 
-        # calibrate user lip distance
-        if proctor.STATE == 'MEASURE_LIP_DIST':
-            print('measuring lip distance')
-            proctor.calibrate_user_lip_distance(frame)
-            proctor.STATE = 'CALIBRATE_USER_ORIENT'
+    ## converting RGB to BGR, as opencv standards
+    frame = cv2.cvtColor(np.array(pimg), cv2.COLOR_RGB2BGR)
 
-        # caliberating user orientaion
-        if proctor.STATE == 'CALIBRATE_USER_ORIENT':
-            scheduler.add_job(func=set_user_orient_calibration_done, trigger='date', run_date=datetime.now()+timedelta(seconds=10), args=[])
-            app.config['SCHEDULAR_STARTED'] = True
-            proctor.calibrating_user_orientation(frame)
-            proctor.STATE = 'CALIBRATE_USER_ORIENT_INPROCESS'
-        
-        if proctor.STATE == 'CALIBRATE_USER_ORIENT_INPROCESS':
-            proctor.calibrating_user_orientation(frame)
-
-        if proctor.STATE == 'CALIBRATE_USER_ORIENT_DONE':
-            if proctor.check_calibrated_user_orient() == True:
-                proctor.STATE = 'START_TEST'
-            else:
-                proctor.STATE = 'CALIBRATE_USER_ORIENT'
-                msg.append('Calibration Can\'t be done properly, sit straight next time')
-                print('Calibration Can\'t be done properly, sit straight next time')
-
-def stream(camera):
-    global frame, proctor
-    while True:
-        #get camera frame
-        # time.sleep(0.03) #30fps
-        if proctor.STATE == 'START_TEST':
-            return
+    if proctor.STATE == 'CHECK_ROOM_INTENSITY':
+        print('checking room intensity')
+        # check is sitting in proper lighting or not
+        if proctor.check_for_room_light_intensity(frame) == True:
+            print('frame intensity good')
+            proctor.STATE = 'MEASURE_LIP_DIST'
+            emit('msg', {'error':False,'msg':'Room Light Fine!!'})
         else:
-            frame = camera.get_frame()
-            ret, jpeg = cv2.imencode('.jpg', frame)
-            stream_frame = jpeg.tobytes()
-            yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + stream_frame + b'\r\n\r\n')
+            print('frame intensity bad')
+            emit('msg', {'error':True,'msg':'Improve Room Light!!'})
+            disconnect() # ends socket con
 
-# @socketio.on('image')
-@app.route('/video-stream')
-@cross_origin()
-def video_feed():
-    global frame, stop_thread
-     # start the capture thread: reads frames from the camera (non-stop) and stores the result in img
-    t = Thread(target=gen, args=(proctor,), daemon=True) # a deamon thread is killed when the application exits
-    t.start()
-    return Response(stream(proctor),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+    # calibrate user lip distance
+    if proctor.STATE == 'MEASURE_LIP_DIST':
+        print('measuring lip distance')
+        proctor.calibrate_user_lip_distance(frame)
+        proctor.STATE = 'CALIBRATE_USER_ORIENT'
+
+    # caliberating user orientaion
+    if proctor.STATE == 'CALIBRATE_USER_ORIENT':
+        scheduler.add_job(func=set_user_orient_calibration_done, trigger='date', run_date=datetime.now()+timedelta(seconds=1), args=[])
+        app.config['SCHEDULAR_STARTED'] = True
+        proctor.calibrating_user_orientation(frame)
+        proctor.STATE = 'CALIBRATE_USER_ORIENT_INPROCESS'
+    
+    if proctor.STATE == 'CALIBRATE_USER_ORIENT_INPROCESS':
+        proctor.calibrating_user_orientation(frame)
+
+    if proctor.STATE == 'CALIBRATE_USER_ORIENT_DONE':
+        if proctor.check_calibrated_user_orient() == True:
+            proctor.STATE = 'START_TEST'
+            emit('msg', {'error':False,'msg':'All Is Fine!! Good to Go!'})
+        else:
+            proctor.STATE = 'CALIBRATE_USER_ORIENT'
+            emit('msg', {'error':True,'msg':'Calibration Can\'t be done properly, sit straight next time'})
+            print('Calibration Can\'t be done properly, sit straight next time')
+            disconnect() # ends socket con
+
+    emit('out-image-event','heartbeat msg')
+
 def gen(camera):
     global frame, stop_thread
     while True:
@@ -218,4 +192,4 @@ if __name__ == "__main__":
     msg = "Employee successfully Added" 
     
     con.close()  
-    app.run(debug=True)
+    socketio.run(app,debug = True)
