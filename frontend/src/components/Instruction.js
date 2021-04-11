@@ -20,8 +20,8 @@ export default class Instruction extends Component {
         return (
             <div>
                 <div div class="mx-auto" style={{width:'60%',height:'60%'}}>
-                    <div style={{padding: '3vh', borderRadius: '5px',backgroundColor: '#727985',color: 'white',margin:'auto',textAlign:'center'}}><h1> Insturctions for Test paper</h1></div>
-                    <ol class="list-group" type='1' style={{fontSize:'1.4rem',paddingTop:'2%',paddingLeft:'4vh'}}>
+                    <div style={{padding: '3vh', borderRadius: '5px',backgroundColor: '#727985',color: 'white',margin:'auto',textAlign:'center', marginTop:'6vh'}}><h1> Insturctions for Test paper</h1></div>
+                    <ol class="list-group" type='1' style={{fontSize:'1.2rem',paddingTop:'2%',paddingLeft:'4vh'}}>
                         <li>Student must be in the frame throughout the test. <br/>If he/she moves out, it will generate warning.</li>
                         <li>Test duration: 15 mins</li>
                         <li>Student should not switch tabs during examination.</li>
@@ -33,9 +33,11 @@ export default class Instruction extends Component {
                         <li>During test proper internet collectivity must be maintained.</li>
                         <li>It will be MCQ test</li>
                     </ol>
-                    <input type="checkbox" class="form-check-input" id="exampleCheck1" onChange={()=>this.setState({accepted:true})} value={this.state.accepted}/>
-                    <label class="form-check-label" for="exampleCheck1">Ready for exam ?</label>
-                    <button class="btn btn-primary" onClick={()=>this.handleSubmit()}>Submit</button>
+                    <div style={{marginLeft: '2vh', marginTop: '3vh'}}>
+                        <input type="checkbox" class="form-check-input" id="exampleCheck1" onChange={()=>this.setState({accepted:true})} value={this.state.accepted}/>
+                        <label class="form-check-label" for="exampleCheck1">Read the Instructions</label>
+                    </div>
+                    <button class="btn btn-primary" style={{margin: 'auto',padding: '0vh 5vh', display: 'block',fontSize: '1.4rem'}} onClick={()=>this.handleSubmit()}>Proceed</button>
                 </div>
             </div>
         )

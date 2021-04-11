@@ -7,7 +7,9 @@ class Calibration extends Component {
         super(props);
         this.state={
             stream:undefined,
-            socket:null
+            socket:null,
+            isPlaying:false,
+            key:0
         }
         this.handleClick = this.handleClick.bind(this);
         this.sendSnapshot = this.sendSnapshot.bind(this);
@@ -37,6 +39,8 @@ class Calibration extends Component {
     }
 
     handleClick(){
+        this.setState({isPlaying:true})
+        this.setState({key:this.state.key+1})
         if(this.state.socket === null){
             this.state.socket = window.io.connect( window.location.protocol + '//' + document.domain + ':' + '5000' + "/test", {
             reconnection: true,
@@ -86,23 +90,25 @@ class Calibration extends Component {
         this.state.socket.on('connect',()=>console.log('connected'))
         this.state.socket.on('disconnect', ()=> {
             console.log('disconnected')
-            this.state.socket.destroy();
-            delete this.state.socket;
-            this.setState({socket:null})
+            if(this.state.socket !== null){
+                this.state.socket.destroy();
+                delete this.state.socket;
+                this.setState({socket:null})
+            }
             } );
 
     }
     render() {
         const minuteSeconds = 60;
         const timerProps = {
-            isPlaying: true,
+            isPlaying: this.state.isPlaying,
             size: 120,
             strokeWidth: 6
           };
           const renderTime = (dimension, time) => {
             return (
               <div className="time-wrapper">
-                <div className="time">{time}</div>
+                <div className="time" style={{textAlign:'center'}}>{time}</div>
                 <div>{dimension}</div>
               </div>
             );
@@ -110,23 +116,28 @@ class Calibration extends Component {
           const getTimeSeconds = (time) => (10 - time) | 0;
         return (
             <div>
-                <CountdownCircleTimer
-                    {...timerProps}
-                    colors={[["#218380"]]}
-                    duration={10}
-                    initialRemainingTime={10}
-                    onComplete={(totalElapsedTime) => console.log('time up')}
-                >
-                    {({ elapsedTime }) =>
-                    renderTime("seconds", getTimeSeconds(elapsedTime))
-                    }
-                </CountdownCircleTimer>
+                <div style={{ width: 'fit-content',position: 'absolute',top: '16vh', right: '3vw'}}>
+                    <CountdownCircleTimer
+                        {...timerProps}
+                        key={this.state.key}
+                        colors={[["#218380"]]}
+                        duration={10}
+                        initialRemainingTime={this.state.isPlaying === false?10:10}
+                        onComplete={(totalElapsedTime) => {console.log('time up');this.setState({isPlaying:false})}}
+                    >
+                        {({ elapsedTime }) =>
+                        renderTime("seconds", getTimeSeconds(elapsedTime))
+                        }
+                    </CountdownCircleTimer>
+                </div>
                 <div><video autoPlay={true} id="videoElement" 
                 style={{display:'none'}}
                 ></video>
-                <canvas id="canvasElement"></canvas></div>
-                <button onClick={()=>this.handleClick()}>Start for Calibration</button>
-                <button onClick={()=>{window.location.href="/test"}}>Take Test</button>
+                <canvas id="canvasElement" style={{backgroundColor: 'grey',borderRadius: '5px',height: '70vh',width: '70vw',margin: '5vh 15vw'}}></canvas></div>
+                <div style={{ margin: 'auto',width: '25vw',display: 'flex',justifyContent: 'space-between'}}>
+                    <button type="button" className="btn btn-info" onClick={()=>this.handleClick()}>Start for Calibration</button>
+                    <button type="button" className="btn btn-success" onClick={()=>{window.location.href="/test"}}>Take Test</button>
+                </div>
             </div>
         )
     }
