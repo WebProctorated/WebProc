@@ -69,8 +69,9 @@ def move_box(box, offset):
         right_x = box[2] + offset[0]
         bottom_y = box[3] + offset[1]
         return [left_x, top_y, right_x, bottom_y]
-
+i = 0
 def detect_marks(img, model, face):
+    global i
     """
     Find the facial landmarks in an image from the faces
 
@@ -126,7 +127,10 @@ def detect_marks(img, model, face):
         return marks
     # handel error generated because user is out of camera view
     except Exception as e:
-        print('error due to corrupt image: ',e)
+        print('error due to corrupt image: ')
+        print(face_img)
+        # cv2.imwrite('image'+str(i)+'.png',face_img)
+        i += 1
         marks = np.array([0]*136)
         marks = np.reshape(marks, (-1, 2))
         

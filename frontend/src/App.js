@@ -6,7 +6,6 @@ import Login from './components/Login';
 import Instruction from './components/Instruction';
 import Calibration from './components/Calibration';
 import Test from './components/Test';
-import Message from './components/Message';
 
 class App extends React.Component{
   constructor(props){

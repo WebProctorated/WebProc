@@ -7,6 +7,8 @@ from proctoring.face_detector import get_face_detector, find_faces
 from proctoring.face_landmarks import get_landmark_model, detect_marks, draw_marks
 from proctoring.model import final_predictor
 import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings('error')
 
 
 class Proctor:
@@ -34,24 +36,27 @@ class Proctor:
         self.net.setInputSwapRB(True)
         self.orient = []
         self.q = 1
-        self.xvals = []
-        self.yvals = []
+        self.xvals = np.array([])
+        self.yvals = np.array([])
         self.base = 0
         self.STATE = 'CHECK_ROOM_INTENSITY'
+        self.CHEAT = False
+        self.TAB_CHANGE = False
+        # np.seterr(all='raise')
         #capturing video
-        self.video = cv2.VideoCapture(0)
+        # self.video = cv2.VideoCapture(0)
     
-    def __del__(self):
-        #releasing camera
-        self.video.release()
+    # def __del__(self):
+    #     #releasing camera
+    #     self.video.release()
 
-    def get_frame(self):
-        ret, frame = self.video.read()
-        return frame
+    # def get_frame(self):
+    #     ret, frame = self.video.read()
+    #     return frame
 
     def animate(self, s, q):
-        self.xvals.append(q)
-        self.yvals.append(s)
+        self.xvals = np.append(self.xvals,q)
+        self.yvals = np.append(self.yvals,s)
 
     def get_2d_points(self, img, rotation_vector, translation_vector, camera_matrix, val):
         point_3d = []
@@ -123,103 +128,115 @@ class Proctor:
         # after calibrating_user_orientation got run for 15 sec
         self.base = np.mean(self.orient)
         print('base: ',self.base)
-        if self.base > 0.90:
+        if self.base > 1.2:
             return False  # i.e. user hasn't been calibrated successfully
         return True
 
     def reset_plot_values(self):
-        self.xvals = []
-        self.yvals = []
+        self.xvals = np.array([])
+        self.yvals = np.array([])
 
-    def draw_graph(self):
-        plt.plot(self.xvals, self.yvals)
-        plt.axhline(y=0.2, color='r', linestyle='-')
-        plt.axhline(y=-0.2, color='r', linestyle='-')
-        plt.show()
+    def save_graph(self):
+        np.savetxt('xvals.txt',self.xvals,fmt="%f")
+        np.savetxt('yvals.txt',self.yvals,fmt='%f')
 
     def predict(self, frame):
         rects = find_faces(frame, self.face_model)
         nfaces = len(rects)
-        for face in rects:
-            marks = detect_marks(frame, self.landmark_model, face)
-            # mark_detector.draw_marks(img, marks, color=(0, 255, 0))
-            cnt_outer = 0
-            cnt_inner = 0
-            image_points = np.array([marks[30],     # Nose tip
-                                     marks[8],     # Chin
-                                     marks[36],     # Left eye left corner
-                                     marks[45],     # Right eye right corne
-                                     marks[48],     # Left Mouth corner
-                                     marks[54]      # Right mouth corner
-                                     ], dtype="double")
+        # for rect in rects:
+        #     cv2.rectangle(frame,(rect[0],rect[1]),(rect[2],rect[3]),(255, 0, 0),3)
+        # cv2.imwrite('image'+str(self.i)+'.png',frame)
+        # self.i += 1
+        if self.TAB_CHANGE == True:
+            self.TAB_CHANGE = False
+            return 1
+        try:
+            if nfaces != 0:
+                for face in rects:
+                    marks = detect_marks(frame, self.landmark_model, face)
+                    # mark_detector.draw_marks(img, marks, color=(0, 255, 0))
+                    cnt_outer = 0
+                    cnt_inner = 0
+                    image_points = np.array([marks[30],     # Nose tip
+                                            marks[8],     # Chin
+                                            marks[36],     # Left eye left corner
+                                            marks[45],     # Right eye right corne
+                                            marks[48],     # Left Mouth corner
+                                            marks[54]      # Right mouth corner
+                                            ], dtype="double")
 
-            dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
+                    dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
 
-            (success, rotation_vector, translation_vector) = cv2.solvePnP(
-                self.model_points, image_points, self.camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_UPNP)
+                    (success, rotation_vector, translation_vector) = cv2.solvePnP(
+                        self.model_points, image_points, self.camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_UPNP)
 
-            (nose_end_point2D, jacobian) = cv2.projectPoints(np.array(
-                [(0.0, 0.0, 1000.0)]), rotation_vector, translation_vector, self.camera_matrix, dist_coeffs)
+                    (nose_end_point2D, jacobian) = cv2.projectPoints(np.array(
+                        [(0.0, 0.0, 1000.0)]), rotation_vector, translation_vector, self.camera_matrix, dist_coeffs)
 
-            p1 = (int(image_points[0][0]), int(image_points[0][1]))
-            p2 = (int(nose_end_point2D[0][0][0]),
-                  int(nose_end_point2D[0][0][1]))
-            x1, x2 = self.head_pose_points(
-                frame, rotation_vector, translation_vector, self.camera_matrix)
+                    p1 = (int(image_points[0][0]), int(image_points[0][1]))
+                    p2 = (int(nose_end_point2D[0][0][0]),
+                        int(nose_end_point2D[0][0][1]))
+                    x1, x2 = self.head_pose_points(
+                        frame, rotation_vector, translation_vector, self.camera_matrix)
 
-            classIds, confs, bbox = self.net.detect(frame, confThreshold=self.thres)
-            # print(classIds,confs,bbox)
-            if len(classIds) != 0:
-                for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
-                    if classId == 77:
-                        c = confidence
-                        # flag=1
-                    else:
-                        c = 0
-            try:
-                m = (p2[1] - p1[1])/(p2[0] - p1[0])
-                ang1 = int(math.degrees(math.atan(m)))
-                ang1 = ang1/90
-            except:
-                ang1 = 90
-                ang1 = ang1/90
+                    classIds, confs, bbox = self.net.detect(frame, confThreshold=self.thres)
+                    # print(classIds,confs,bbox)
+                    if len(classIds) != 0:
+                        for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
+                            if classId == 77:
+                                c = confidence
+                                # flag=1
+                            else:
+                                c = 0
+                    try:
+                        m = (p2[1] - p1[1])/(p2[0] - p1[0])
+                        ang1 = int(math.degrees(math.atan(m)))
+                        ang1 = ang1/90
+                    except:
+                        ang1 = 90
+                        ang1 = ang1/90
 
-            try:
-                m = (x2[1] - x1[1])/(x2[0] - x1[0])
-                ang2 = int(math.degrees(math.atan(-1/m)))
-                ang2 = ang2/90
-            except:
-                ang2 = 90/90
+                    try:
+                        m = (x2[1] - x1[1])/(x2[0] - x1[0])
+                        ang2 = int(math.degrees(math.atan(-1/m)))
+                        ang2 = ang2/90
+                    except:
+                        ang2 = 90/90
 
-            for i, (m1, m2) in enumerate(self.outer_points):
-                if self.d_outer[i] + 3 < marks[m2][1] - marks[m1][1]:
-                    cnt_outer += 1
-            cnt_outer = cnt_outer/5
+                    for i, (m1, m2) in enumerate(self.outer_points):
+                        if self.d_outer[i] + 3 < marks[m2][1] - marks[m1][1]:
+                            cnt_outer += 1
+                    cnt_outer = cnt_outer/5
 
-            for i, (m1, m2) in enumerate(self.inner_points):
-                if self.d_inner[i] + 2 < marks[m2][1] - marks[m1][1]:
-                    cnt_inner += 1
-            cnt_inter = cnt_inner/3
+                    for i, (m1, m2) in enumerate(self.inner_points):
+                        if self.d_inner[i] + 2 < marks[m2][1] - marks[m1][1]:
+                            cnt_inner += 1
+                    cnt_inter = cnt_inner/3
 
-            # print([nfaces,ang1,ang2,cnt_outer,cnt_inner,c])
-            x = pd.DataFrame(
-                np.array([nfaces, ang1, ang2, cnt_outer, cnt_inner, c]).reshape(1, -1))
-            # print(x)
-        #cv2.putText(img, 'Orient', (30, 30), font,1, (0, 255, 255), 2)
-        
-        s = final_predictor(x)
-        if c == 0:
-            che = s-self.base
-            print(che)
-            self.animate(che, self.q)
-            self.q = self.q+1
-        else:
-            che = 1
-            print(che)
-            self.animate(che, self.q)
-            self.q = self.q+1
-
-        return s
+                    # print([nfaces,ang1,ang2,cnt_outer,cnt_inner,c])
+                    x = pd.DataFrame(
+                        np.array([nfaces, ang1, ang2, cnt_outer, cnt_inner, c]).reshape(1, -1))
+                    # print(x)
+                #cv2.putText(img, 'Orient', (30, 30), font,1, (0, 255, 255), 2)
+                
+                s = final_predictor(x)
+                if c == 0:
+                    che = s-self.base
+                    print(che)
+                    self.animate(che, self.q)
+                    self.q = self.q+1
+                else:
+                    che = 1
+                    print(che)
+                    self.animate(che, self.q)
+                    self.q = self.q+1
+                if self.STATE == 'TEST_INPROCESS':
+                    self.CHEAT = True
+                return s
+            else:
+                return 1 # cheating behaviour
+        except Warning:
+            return 1 # cheating behaviour
 
     def after_math(self):
         # after calibrate_user_lip_distannce
