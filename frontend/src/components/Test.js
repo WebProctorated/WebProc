@@ -42,7 +42,7 @@ class Test extends Component {
         if(this.state.socket !== null){
             this.state.socket.emit('proctor', dataURL);
             this.state.socket.on('out-image-event', (data)=> {
-                console.log(data)
+                // console.log(data)
             });
         }
         if(window.CHEAT === true){
@@ -85,7 +85,7 @@ class Test extends Component {
                 if(this.state.socket === null)
                     clearInterval(id);
                 self.sendSnapshot();
-            }, 1000/16);
+            }, 1000/6);
         }).catch((error)=>{
             console.log(error);
         });

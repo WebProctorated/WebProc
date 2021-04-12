@@ -30,7 +30,7 @@ export default class Instruction extends Component {
                         <li>And incorrect will deduct .25 mark.</li>
                         <li>Test will have __ number of questions.</li>
                         <li>__ Maximum marks</li>
-                        <li>During test proper internet collectivity must be maintained.</li>
+                        <li>Internet Connection should be good enough.</li>
                         <li>It will be MCQ test</li>
                     </ol>
                     <div style={{marginLeft: '2vh', marginTop: '3vh'}}>

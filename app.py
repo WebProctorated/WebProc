@@ -34,7 +34,7 @@ scheduler.start()
 @app.route('/cheat',methods=['POST'])
 @cross_origin()
 def cheat():
-    if proctor.STATE == TEST_INPROCESS:
+    if proctor.STATE == 'TEST_INPROCESS':
         proctor.CHEAT = True
         proctor.TAB_CHANGE = True
     return Response(status=201)
@@ -66,13 +66,13 @@ def proctor_task():
     while flag == True:
         if len(frame_q) == 0:
             continue
-        print(proctor.STATE)
+        # time.sleep(0.1)
         frame = frame_q.pop(0)
         try:
             if proctor.STATE == 'START_TEST':
                 proctor.STATE = 'TEST_INPROCESS'
                 proctor.reset_plot_values()  # to clear the values accumulated while calibrations
-                scheduler.add_job(func=set_start_test, trigger='date', run_date=datetime.now()+timedelta(minutes=1),args=[])
+                scheduler.add_job(func=set_start_test, trigger='date', run_date=datetime.now()+timedelta(minutes=2),args=[])
                 proctor.predict(frame)
             
             if proctor.STATE == 'TEST_INPROCESS':
@@ -89,11 +89,15 @@ def proctor_task():
 def calibration_task():
     global flag, frame_q, msg_q, proctor
     while flag == True:
-        # time.sleep(0.2)
+        # time.sleep(0.1)
         if len(frame_q) == 0:
             continue
+
+        if proctor.STATE == 'START_TEST':
+            msg_q.append({'error':True,'msg':'You Already have took the test!!'})
+            return
+
         frame = frame_q.pop(0)
-        print(proctor.STATE)
         if proctor.STATE == 'CHECK_ROOM_INTENSITY':
             print('checking room intensity')
             # check is sitting in proper lighting or not
@@ -225,20 +229,20 @@ def set_start_test():
 
 
 if __name__ == "__main__":
-    # con = sqlite3.connect("student.db")  
-    # print("Database opened successfully")  
-    # # con.execute("DROP TABLE Student")
-    # # con.execute("DROP TABLE Questions")
-    # # con.execute("DROP TABLE Result")
-    # con.execute("create table Student (enrollment_number VARCHAR[12] PRIMARY KEY , first_name TEXT NOT NULL, last_name TEXT NOT NULL, password VARCHAR[30] NOT NULL)")  
-    # con.execute("create table Questions (question_id INTEGER PRIMARY KEY AUTOINCREMENT, question TEXT NOT NULL, a TEXT NOT NULL, b TEXT NOT NULL, c TEXT NOT NULL, d TEXT NOT NULL, answer TEXT NOT NULL)") 
-    # con.execute("create table Result (enrollment_number VARCHAR[12] PRIMARY KEY , marks INTEGER NOT NULL) ")
-    # print("Table created successfully")  
+    con = sqlite3.connect("student.db")  
+    print("Database opened successfully")  
+    con.execute("DROP TABLE Student")
+    con.execute("DROP TABLE Questions")
+    con.execute("DROP TABLE Result")
+    con.execute("create table Student (enrollment_number VARCHAR[12] PRIMARY KEY , first_name TEXT NOT NULL, last_name TEXT NOT NULL, password VARCHAR[30] NOT NULL)")  
+    con.execute("create table Questions (question_id INTEGER PRIMARY KEY AUTOINCREMENT, question TEXT NOT NULL, a TEXT NOT NULL, b TEXT NOT NULL, c TEXT NOT NULL, d TEXT NOT NULL, answer TEXT NOT NULL)") 
+    con.execute("create table Result (enrollment_number VARCHAR[12] PRIMARY KEY , marks INTEGER NOT NULL) ")
+    print("Table created successfully")  
 
-    # cur = con.cursor()  
-    # cur.execute("INSERT OR IGNORE into Student (enrollment_number,first_name, last_name, password) values (?,?,?,?)",('student_123','first_name','last_name','test_123'))  
-    # con.commit()
-    # msg = "Employee successfully Added" 
+    cur = con.cursor()  
+    cur.execute("INSERT OR IGNORE into Student (enrollment_number,first_name, last_name, password) values (?,?,?,?)",('student_123','first_name','last_name','test_123'))  
+    con.commit()
+    msg = "Employee successfully Added" 
     
-    # con.close()  
+    con.close()  
     socketio.run(app,debug = True)

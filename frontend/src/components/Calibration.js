@@ -33,14 +33,16 @@ class Calibration extends Component {
             this.state.socket.emit('output image')
 
             this.state.socket.on('out-image-event', (data)=> {
-                console.log(data)
+                if(this.state.isPlaying  === false){
+                    this.setState({isPlaying:true})
+                    this.setState({key:this.state.key+1})
+                }
+                // console.log(data)
             });
         }
     }
 
     handleClick(){
-        this.setState({isPlaying:true})
-        this.setState({key:this.state.key+1})
         if(this.state.socket === null){
             this.state.socket = window.io.connect( window.location.protocol + '//' + document.domain + ':' + '5000' + "/test", {
             reconnection: true,
@@ -67,7 +69,7 @@ class Calibration extends Component {
                 if(this.state.socket === null)
                     clearInterval(id);
                 self.sendSnapshot();
-            }, 1000/16);
+            }, 1000/6);
         }).catch((error)=>{
             console.log(error);
         });

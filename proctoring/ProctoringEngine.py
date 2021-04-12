@@ -128,8 +128,8 @@ class Proctor:
         # after calibrating_user_orientation got run for 15 sec
         self.base = np.mean(self.orient)
         print('base: ',self.base)
-        if self.base > 1.2:
-            return False  # i.e. user hasn't been calibrated successfully
+        # if self.base > 0.8:
+        #     return False  # i.e. user hasn't been calibrated successfully
         return True
 
     def reset_plot_values(self):
@@ -230,7 +230,7 @@ class Proctor:
                     print(che)
                     self.animate(che, self.q)
                     self.q = self.q+1
-                if self.STATE == 'TEST_INPROCESS':
+                if self.STATE == 'TEST_INPROCESS' and (che>0.4 or che<-0.4):
                     self.CHEAT = True
                 return s
             else:
