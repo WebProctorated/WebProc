@@ -58,16 +58,19 @@ def login():
 
 flag = False
 frame_q = []
+frame = []
 msg_q = []
 
 def proctor_task():
-    global flag, frame_q, msg_q, proctor
+    global flag, frame_q, msg_q, proctor,frame
 
     while flag == True:
-        if len(frame_q) == 0:
-            continue
+        # if len(frame_q) == 0:
+        #     continue
         # time.sleep(0.1)
-        frame = frame_q.pop(0)
+        # frame = frame_q.pop(0)
+        if len(frame) == 0:
+            continue
         try:
             if proctor.STATE == 'START_TEST':
                 proctor.STATE = 'TEST_INPROCESS'
@@ -87,17 +90,21 @@ def proctor_task():
             return 
 
 def calibration_task():
-    global flag, frame_q, msg_q, proctor
+    global flag, frame_q, msg_q, proctor,frame
     while flag == True:
         # time.sleep(0.1)
-        if len(frame_q) == 0:
+        # if len(frame_q) == 0:
+        #     continue
+        # if not frame:
+        #     continue
+        if len(frame) == 0:
             continue
 
         if proctor.STATE == 'START_TEST':
             msg_q.append({'error':True,'msg':'You Already have took the test!!'})
             return
 
-        frame = frame_q.pop(0)
+        # frame = frame_q.pop(0)
         if proctor.STATE == 'CHECK_ROOM_INTENSITY':
             print('checking room intensity')
             # check is sitting in proper lighting or not
@@ -158,7 +165,7 @@ start_proctoring = False
 
 @socketio.on('calibrate', namespace='/test')
 def calibration(data_image):
-    global frame_q,msg_q,start_calibration,flag
+    global frame_q,msg_q,start_calibration,flag,frame
 
     if start_calibration == False:
         start_calibration = True
@@ -176,7 +183,7 @@ def calibration(data_image):
 
     ## converting RGB to BGR, as opencv standards
     frame = cv2.cvtColor(np.array(pimg), cv2.COLOR_RGB2BGR)
-    frame_q.append(frame)
+    # frame_q.append(frame)
 
     if len(msg_q) != 0:
         m = msg_q.pop(0)

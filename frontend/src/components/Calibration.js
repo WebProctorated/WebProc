@@ -69,7 +69,7 @@ class Calibration extends Component {
                 if(this.state.socket === null)
                     clearInterval(id);
                 self.sendSnapshot();
-            }, 1000/6);
+            }, 1000/7);
         }).catch((error)=>{
             console.log(error);
         });
