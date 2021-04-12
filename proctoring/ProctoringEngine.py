@@ -7,12 +7,14 @@ from proctoring.face_detector import get_face_detector, find_faces
 from proctoring.face_landmarks import get_landmark_model, detect_marks, draw_marks
 from proctoring.model import final_predictor
 import matplotlib.pyplot as plt
-import warnings
-warnings.filterwarnings('error')
+# import warnings
+# warnings.filterwarnings('error')
 
 
 class Proctor:
     def __init__(self):
+        #capturing video
+        self.video = cv2.VideoCapture(0)
         self.face_model = get_face_detector()
         self.landmark_model = get_landmark_model()
         self.outer_points = [[49, 59], [50, 58], [51, 57], [52, 56], [53, 55]]
@@ -43,8 +45,7 @@ class Proctor:
         self.CHEAT = False
         self.TAB_CHANGE = False
         # np.seterr(all='raise')
-        #capturing video
-        self.video = cv2.VideoCapture(0)
+        
     
     def __del__(self):
         #releasing camera

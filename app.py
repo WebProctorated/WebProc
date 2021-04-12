@@ -17,8 +17,15 @@ from datetime import datetime, timedelta
 from threading import Thread
 import sqlite3
 import sys
+import cv2
+import os
 
-app = Flask(__name__)
+
+template_dir = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+template_dir = os.path.join(template_dir, 'frontend/public')
+# template_dir = os.path.join(template_dir, 'templates')
+
+app = Flask(__name__,template_folder=template_dir)
 
 Payload.max_decode_packets = 500
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -28,11 +35,17 @@ app.secret_key = 'super secret key'
 app.config['SESSION_TYPE'] = 'filesystem'
 
 proctor = Proctor()
+print('//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////',proctor.get_frame())
 scheduler = BackgroundScheduler()
 scheduler.start()
 
 stop_thread = False
 
+@app.route('/cheat',methods=['POST'])
+@cross_origin()
+def home():
+    return render_template('index.html')
+    
 @app.route('/cheat',methods=['POST'])
 @cross_origin()
 def cheat():
@@ -61,9 +74,10 @@ def login():
 flag = False
 frame_q = []
 msg_q = []
+frame = None
 
 def proctor_task(camera):
-    global msg_q, proctor,stop_thread,start_proctoring
+    global msg_q, proctor,stop_thread,start_proctoring,frame
 
     while proctor.STATE != 'TERMINATE':
         if len(frame_q) == 0:
@@ -91,7 +105,7 @@ def proctor_task(camera):
             return 
 
 def calibration_task(camera):
-    global msg_q, proctor,stop_thread,start_proctoring
+    global msg_q, proctor,stop_thread,start_proctoring,frame
     while True:
         # time.sleep(0.2)
         if frame is None:
