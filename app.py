@@ -31,6 +31,8 @@ proctor = Proctor()
 scheduler = BackgroundScheduler()
 scheduler.start()
 
+stop_thread = False
+
 @app.route('/cheat',methods=['POST'])
 @cross_origin()
 def cheat():
@@ -60,14 +62,15 @@ flag = False
 frame_q = []
 msg_q = []
 
-def proctor_task():
-    global flag, frame_q, msg_q, proctor
+def proctor_task(camera):
+    global msg_q, proctor,stop_thread,start_proctoring
 
-    while flag == True:
+    while proctor.STATE != 'TERMINATE':
         if len(frame_q) == 0:
             continue
-        print(proctor.STATE)
-        frame = frame_q.pop(0)
+        if frame is None:
+            #get camera frame
+            frame = camera.get_frame()
         try:
             if proctor.STATE == 'START_TEST':
                 proctor.STATE = 'TEST_INPROCESS'
@@ -78,7 +81,8 @@ def proctor_task():
             if proctor.STATE == 'TEST_INPROCESS':
                 proctor.predict(frame)
         except Exception as e:
-            emit('msg',{'error':True,'msg':'Cheating Detected'})
+            msg_q.append({'error':True,'msg':'Cheating Detected'})
+            proctor.STATE == 'TERMINATE'
 
         if proctor.STATE == 'TEST_DONE':
             proctor.save_graph()
@@ -86,13 +90,14 @@ def proctor_task():
             print('Test Done!!')
             return 
 
-def calibration_task():
-    global flag, frame_q, msg_q, proctor
-    while flag == True:
+def calibration_task(camera):
+    global msg_q, proctor,stop_thread,start_proctoring
+    while True:
         # time.sleep(0.2)
-        if len(frame_q) == 0:
-            continue
-        frame = frame_q.pop(0)
+        if frame is None:
+            #get camera frame
+            frame = camera.get_frame()
+    
         print(proctor.STATE)
         if proctor.STATE == 'CHECK_ROOM_INTENSITY':
             print('checking room intensity')
@@ -105,7 +110,8 @@ def calibration_task():
             else:
                 print('frame intensity bad')
                 msg_q.append({'error':True,'msg':'Improve Room Light!!'})
-                flag = False
+                start_proctoring = False
+                return
 
         # calibrate user lip distance
         if proctor.STATE == 'MEASURE_LIP_DIST':
@@ -127,84 +133,85 @@ def calibration_task():
                 if proctor.check_calibrated_user_orient() == True:
                     proctor.STATE = 'START_TEST'
                     msg_q.append({'error':True,'msg':'All Is Fine!! Good to Go!'})
+                    start_proctoring = False
                     return
                     # emit('msg', {'error':False,'msg':'All Is Fine!! Good to Go!'})
                 else:
                     proctor.STATE = 'CALIBRATE_USER_ORIENT'
                     msg_q.append({'error':True,'msg':'Calibration Can\'t be done properly, sit straight next time'})
-                    flag = False
                     # emit('msg', {'error':True,'msg':'Calibration Can\'t be done properly, sit straight next time'})
                     print('Calibration Can\'t be done properly, sit straight next time')
+                    start_proctoring = False
                     return
                     # disconnect() # ends socket con
         except Exception as e:
             proctor.STATE = 'CALIBRATE_USER_ORIENT'
             msg_q.append({'error':True,'msg':'Calibration Can\'t be done properly, sit straight next time'})
+            start_proctoring = False
             return
 
     return 
 
 
+start_calibration = False
+start_proctoring = False
+
+def stream(camera):
+    global frame, start_proctoring
+    while start_proctoring == True:
+        #get camera frame
+        time.sleep(0.03) #30fps
+        frame = camera.get_frame()
+        ret, jpeg = cv2.imencode('.jpg', frame)
+        stream_frame = jpeg.tobytes()
+        yield (b'--frame\r\n'
+            b'Content-Type: image/jpeg\r\n\r\n' + stream_frame + b'\r\n\r\n')
+
+@app.route('/calibration')
+@cross_origin()
+def calibration():
+    global frame, stop_thread,start_proctoring
+     # start the capture thread: reads frames from the camera (non-stop) and stores the result in img
+    t = Thread(target=calibration_task, args=(proctor,), daemon=True) # a deamon thread is killed when the application exits
+    t.start()
+    start_proctoring = True
+    return Response(stream(proctor),status=201,
+                mimetype='multipart/x-mixed-replace; boundary=frame')
+
 @socketio.on('connect', namespace='/test')
 def test_connect():
     app.logger.info("client connected")
 
-start_calibration = False
-start_proctoring = False
-
 @socketio.on('calibrate', namespace='/test')
-def calibration(data_image):
-    global frame_q,msg_q,start_calibration,flag
-
-    if start_calibration == False:
-        start_calibration = True
-        flag = True
-        t = Thread(target=calibration_task, daemon=True) # a deamon thread is killed when the application exits
-        t.start()
-
-    data_image = data_image.split(",")[1]
-    sbuf = StringIO()
-    sbuf.write(data_image)
-
-    # decode and convert into image
-    b = io.BytesIO(base64.b64decode(data_image))
-    pimg = Image.open(b)
-
-    ## converting RGB to BGR, as opencv standards
-    frame = cv2.cvtColor(np.array(pimg), cv2.COLOR_RGB2BGR)
-    frame_q.append(frame)
+def calibration(data):
+    global msg_q
 
     if len(msg_q) != 0:
         m = msg_q.pop(0)
         emit('msg',m)
         if m['error'] == True:
-            start_calibration = False
             disconnect()
-
 
     emit('out-image-event','heartbeat msg')
 
+@app.route('/proctor')
+@cross_origin()
+def proctor():
+    global frame, stop_thread,start_proctoring
+     # start the capture thread: reads frames from the camera (non-stop) and stores the result in img
+    t = Thread(target=proctor_task, args=(proctor,), daemon=True) # a deamon thread is killed when the application exits
+    t.start()
+    start_proctoring = True
+    return Response(stream(proctor),status=201,
+                mimetype='multipart/x-mixed-replace; boundary=frame')
+
 @socketio.on('proctor', namespace='/test')
-def calibration(data_image):
-    global frame_q,msg_q,start_proctoring,flag
+def proctor(data):
+    global msg_q,start_proctoring
 
-    if start_proctoring == False:
-        start_proctoring = True
-        flag = True
-        t = Thread(target=proctor_task, daemon=True) # a deamon thread is killed when the application exits
-        t.start()
-
-    data_image = data_image.split(",")[1]
-    sbuf = StringIO()
-    sbuf.write(data_image)
-
-    # decode and convert into image
-    b = io.BytesIO(base64.b64decode(data_image))
-    pimg = Image.open(b)
-
-    ## converting RGB to BGR, as opencv standards
-    frame = cv2.cvtColor(np.array(pimg), cv2.COLOR_RGB2BGR)
-    frame_q.append(frame)
+    if len(msg_q) != 0:
+        m = msg_q.pop(0)
+        emit('msg',m)
 
     if proctor.CHEAT == True:
         proctor.CHEAT = False

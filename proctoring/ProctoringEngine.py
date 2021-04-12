@@ -44,15 +44,15 @@ class Proctor:
         self.TAB_CHANGE = False
         # np.seterr(all='raise')
         #capturing video
-        # self.video = cv2.VideoCapture(0)
+        self.video = cv2.VideoCapture(0)
     
-    # def __del__(self):
-    #     #releasing camera
-    #     self.video.release()
+    def __del__(self):
+        #releasing camera
+        self.video.release()
 
-    # def get_frame(self):
-    #     ret, frame = self.video.read()
-    #     return frame
+    def get_frame(self):
+        ret, frame = self.video.read()
+        return frame
 
     def animate(self, s, q):
         self.xvals = np.append(self.xvals,q)

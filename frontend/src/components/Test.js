@@ -32,15 +32,15 @@ class Test extends Component {
       }
 
     sendSnapshot(){
-        let video = document.querySelector("#videoElement");
-        let canvas = document.querySelector("#canvasElement");
-        let ctx = canvas.getContext('2d');
+        // let video = document.querySelector("#videoElement");
+        // let canvas = document.querySelector("#canvasElement");
+        // let ctx = canvas.getContext('2d');
 
-        ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, 300, 150);
+        // ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, 300, 150);
 
-        let dataURL = canvas.toDataURL('image/jpeg');
+        // let dataURL = canvas.toDataURL('image/jpeg');
         if(this.state.socket !== null){
-            this.state.socket.emit('proctor', dataURL);
+            this.state.socket.emit('proctor',{} );
             this.state.socket.on('out-image-event', (data)=> {
                 console.log(data)
             });
@@ -147,7 +147,7 @@ class Test extends Component {
                 <div><video autoPlay={true} id="videoElement" 
                 style={{display:'none'}}
                 ></video>
-                <canvas id="canvasElement" style={{backgroundColor: 'grey',borderRadius: '5px',height: '30vh',width: '25vw',marginLeft: '72vw',marginTop: '4vh'}}></canvas></div>
+                <img style={{backgroundColor: 'grey',borderRadius: '5px',height: '30vh',width: '25vw',marginLeft: '72vw',marginTop: '4vh'}}/></div>
                 <div style={{width: 'fit-content',margin: 'auto',marginTop: '-30vh'}}>
                     <h1>7 Wonders of the World</h1>
                     <form action="" id="quiz" method="POST">

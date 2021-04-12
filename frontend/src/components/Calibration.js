@@ -20,27 +20,27 @@ class Calibration extends Component {
     }
 
     sendSnapshot(){
-        let video = document.querySelector("#videoElement");
-        let canvas = document.querySelector("#canvasElement");
-        let ctx = canvas.getContext('2d');
+        // let video = document.querySelector("#videoElement");
+        // let canvas = document.querySelector("#canvasElement");
+        // let ctx = canvas.getContext('2d');
 
-        ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, 300, 150);
+        // ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, 300, 150);
 
-        let dataURL = canvas.toDataURL('image/jpeg');
+        // let dataURL = canvas.toDataURL('image/jpeg');
         if(this.state.socket !== null){
-            this.state.socket.emit('calibrate', dataURL);
+            this.state.socket.emit('calibrate',{});
 
-            this.state.socket.emit('output image')
+            // this.state.socket.emit('output image')
 
             this.state.socket.on('out-image-event', (data)=> {
+                this.setState({isPlaying:true})
+                this.setState({key:this.state.key+1})
                 console.log(data)
             });
         }
     }
 
     handleClick(){
-        this.setState({isPlaying:true})
-        this.setState({key:this.state.key+1})
         if(this.state.socket === null){
             this.state.socket = window.io.connect( window.location.protocol + '//' + document.domain + ':' + '5000' + "/test", {
             reconnection: true,
@@ -62,7 +62,7 @@ class Calibration extends Component {
             video.srcObject = stream;
             localMediaStream = stream;
             var self = this;
-            // let sendSnapshot = this.sendSnapshot
+            let sendSnapshot = this.sendSnapshot
             let id = setInterval(()=>{
                 if(this.state.socket === null)
                     clearInterval(id);
@@ -133,7 +133,7 @@ class Calibration extends Component {
                 <div><video autoPlay={true} id="videoElement" 
                 style={{display:'none'}}
                 ></video>
-                <canvas id="canvasElement" style={{backgroundColor: 'grey',borderRadius: '5px',height: '70vh',width: '70vw',margin: '5vh 15vw'}}></canvas></div>
+                <video src='blob:http://localhost:5000/calibration' style={{borderRadius: '5px',height: '70vh',width: '70vw',margin: '5vh 15vw'}}></video></div>
                 <div style={{ margin: 'auto',width: '25vw',display: 'flex',justifyContent: 'space-between'}}>
                     <button type="button" className="btn btn-info" onClick={()=>this.handleClick()}>Start for Calibration</button>
                     <button type="button" className="btn btn-success" onClick={()=>{window.location.href="/test"}}>Take Test</button>
