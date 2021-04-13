@@ -67,7 +67,7 @@ def proctor_task():
     while flag == True:
         # if len(frame_q) == 0:
         #     continue
-        # time.sleep(0.1)
+        time.sleep(0.1)
         # frame = frame_q.pop(0)
         if len(frame) == 0:
             continue
@@ -92,7 +92,7 @@ def proctor_task():
 def calibration_task():
     global flag, frame_q, msg_q, proctor,frame
     while flag == True:
-        # time.sleep(0.1)
+        time.sleep(0.1)
         # if len(frame_q) == 0:
         #     continue
         # if not frame:
@@ -165,7 +165,7 @@ start_proctoring = False
 
 @socketio.on('calibrate', namespace='/test')
 def calibration(data_image):
-    global frame_q,msg_q,start_calibration,flag,frame
+    global msg_q,start_calibration,flag,frame
 
     if start_calibration == False:
         start_calibration = True
@@ -197,7 +197,7 @@ def calibration(data_image):
 
 @socketio.on('proctor', namespace='/test')
 def calibration(data_image):
-    global frame_q,msg_q,start_proctoring,flag
+    global msg_q,start_proctoring,flag,frame
 
     if start_proctoring == False:
         start_proctoring = True
@@ -215,7 +215,7 @@ def calibration(data_image):
 
     ## converting RGB to BGR, as opencv standards
     frame = cv2.cvtColor(np.array(pimg), cv2.COLOR_RGB2BGR)
-    frame_q.append(frame)
+    # frame_q.append(frame)
 
     if proctor.CHEAT == True:
         proctor.CHEAT = False
