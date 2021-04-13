@@ -21,11 +21,11 @@ import cv2
 import os
 
 
-template_dir = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-template_dir = os.path.join(template_dir, 'frontend/public')
+# template_dir = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+# template_dir = os.path.join(template_dir, 'frontend/public')
 # template_dir = os.path.join(template_dir, 'templates')
 
-app = Flask(__name__,template_folder=template_dir)
+app = Flask(__name__)
 
 Payload.max_decode_packets = 500
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -41,10 +41,7 @@ scheduler.start()
 
 stop_thread = False
 
-@app.route('/cheat',methods=['POST'])
-@cross_origin()
-def home():
-    return render_template('index.html')
+
     
 @app.route('/cheat',methods=['POST'])
 @cross_origin()
