@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response, request, session, Response, jsonify, make_response
+from flask import Flask, render_template, Response, request, session, Response, jsonify, make_response, json
 from flask_socketio import SocketIO, emit, disconnect
 from engineio.payload import Payload
 from io import StringIO
@@ -27,8 +27,8 @@ import time
 
 app = Flask(__name__)
 
-Payload.max_decode_packets = 500
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Payload.max_decode_packets = 500
+# socketio = SocketIO(app, cors_allowed_origins="*")
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.secret_key = 'super secret key'
@@ -102,19 +102,25 @@ frame = None
 
 def proctor_task(camera):
     global msg_q, proctor, stop_thread, start_proctoring, frame
-
+    t = 0
     while proctor.STATE != 'TERMINATE':
-        if len(frame_q) == 0:
-            continue
+        # if len(frame_q) == 0:
+        #     continue
         if frame is None:
             # get camera frame
-            frame = camera.get_frame()
+            # frame = camera.get_frame()
+            continue
+        elapsed_time = time.time()
+        if elapsed_time - t >= 120 and elapsed_time - t < 140:
+            proctor.STATE = 'TEST_DONE'
+        print(elapsed_time-t)
         try:
             if proctor.STATE == 'START_TEST':
                 proctor.STATE = 'TEST_INPROCESS'
                 proctor.reset_plot_values()  # to clear the values accumulated while calibrations
-                scheduler.add_job(func=set_start_test, trigger='date',
-                                  run_date=datetime.now()+timedelta(minutes=1), args=[])
+                # scheduler.add_job(func=set_start_test, trigger='date',
+                #                   run_date=datetime.now()+timedelta(minutes=1), args=[])
+                t = time.time()
                 proctor.predict(frame)
 
             if proctor.STATE == 'TEST_INPROCESS':
@@ -134,7 +140,7 @@ def calibration_task(camera):
     global msg_q, stop_thread, start_proctoring, frame,proctor,scheduler
     t = 0
     while True:
-        # time.sleep(0.1)
+        # time.sleep(0.16)
         if frame is None:
             # get camera frame
             # frame = camera.get_frame()
@@ -242,7 +248,7 @@ def get_msg():
     while True:
         if len(msg_q) != 0:
             m = msg_q.pop(0)
-            yield jsonify(m)
+            yield json.dumps(m)
 
 
 @app.route('/msg')
@@ -277,7 +283,7 @@ def msg():
     # emit('out-image-event','heartbeat msg') test_123
 
 
-@app.route('/proctor')
+@app.route('/proctor_route')
 @cross_origin()
 def proctor_route():
     global frame, stop_thread, start_proctoring, proctor
@@ -333,4 +339,4 @@ if __name__ == "__main__":
     # msg = "Employee successfully Added"
 
     # con.close()
-    socketio.run(app, debug=True)
+    app.run(debug=True)
