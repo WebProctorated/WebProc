@@ -59,7 +59,7 @@ class Test extends Component {
     }
 
     startTest(){
-        document.getElementById('test_window').setAttribute('src',window.src);
+        document.getElementById('test_window').setAttribute('src',window.test_src);
         setInterval(()=>{
             fetch('http://localhost:5000/msg')
             .then(res=>{
