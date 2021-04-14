@@ -53,7 +53,7 @@ class Proctor:
 
     def get_frame(self):
         ret, frame = self.video.read()
-        return frame
+        return ret,frame
 
     def animate(self, s, q):
         self.xvals = np.append(self.xvals,q)
@@ -129,7 +129,7 @@ class Proctor:
         # after calibrating_user_orientation got run for 15 sec
         self.base = np.mean(self.orient)
         print('base: ',self.base)
-        if self.base > 1.2:
+        if self.base > 0.8:
             return False  # i.e. user hasn't been calibrated successfully
         return True
 

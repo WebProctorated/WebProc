@@ -11,7 +11,11 @@ class App extends React.Component{
   constructor(props){
     super(props);
     this.state = {
-      msg:null
+      msg:null,
+      login:true,
+      instructions:false,
+      calibration:false,
+      test:false
     }
     this.setMessage = this.setMessage.bind(this)
   }
@@ -21,17 +25,23 @@ class App extends React.Component{
   render(){
     return (
       <div className="App">
+        {this.state.login?
+         <Login setInstructions={(val)=>this.setState({instructions:val,login:false})}/>:this.state.instructions?
+         <Instruction setCalibration={(val)=>this.setState({calibration:val,instructions:false})}/>:this.state.calibration?
+         <Calibration setTest={(val)=>this.setState({test:val,calibration:false})}/>:this.state.test?
+        <Test/>:''
+        }
         {/* <Message msg={this.state.msg} setMessage={this.setMessage}/>
         <Login setMessage={this.setMessage}/> */}
-        <Router>
-          {/* <Login setMessage={this.setMessage}/> */}
-          <Switch>
+        {/* <Router> */}
+         {/* <Login setMessage={this.setMessage}/>  */}
+          {/* <Switch>
             <Route exact path="/" component={Login}/>
             <Route exact path="/instructions" component={Instruction} />
             <Route exact path="/calibration" component={Calibration} />
             <Route exact path="/test" component={Test} />
           </Switch>
-        </Router>
+        </Router> */}
       </div>
     );
   } 

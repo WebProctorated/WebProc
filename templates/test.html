@@ -1,0 +1,76 @@
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <link rel="icon" href="/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Web site created using create-react-app">
+  <link rel="apple-touch-icon" href="/logo192.png">
+  <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.1/css/bootstrap.min.css" integrity="sha384-VCmXjywReHh4PwowAiWNagnWcLhlEJLA5buUprzK8rxFgeH0kww/aWY76TfkUoSX" crossorigin="anonymous">
+  <!--
+      Notice the use of  in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+  <title>visible</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<style>body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height:100vh;
+  /* margin-top: -11vh; */
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+html, body, #root, .App {
+  height: 100%;
+}
+/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIndlYnBhY2s6Ly9zcmMvaW5kZXguY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0VBQ0UsU0FBUztFQUNUOztjQUVZO0VBQ1osbUNBQW1DO0VBQ25DLGtDQUFrQztFQUNsQyxZQUFZO0VBQ1osdUJBQXVCO0FBQ3pCOztBQUVBO0VBQ0U7YUFDVztBQUNiOztBQUVBO0VBQ0UsWUFBWTtBQUNkIiwic291cmNlc0NvbnRlbnQiOlsiYm9keSB7XG4gIG1hcmdpbjogMDtcbiAgZm9udC1mYW1pbHk6IC1hcHBsZS1zeXN0ZW0sIEJsaW5rTWFjU3lzdGVtRm9udCwgJ1NlZ29lIFVJJywgJ1JvYm90bycsICdPeHlnZW4nLFxuICAgICdVYnVudHUnLCAnQ2FudGFyZWxsJywgJ0ZpcmEgU2FucycsICdEcm9pZCBTYW5zJywgJ0hlbHZldGljYSBOZXVlJyxcbiAgICBzYW5zLXNlcmlmO1xuICAtd2Via2l0LWZvbnQtc21vb3RoaW5nOiBhbnRpYWxpYXNlZDtcbiAgLW1vei1vc3gtZm9udC1zbW9vdGhpbmc6IGdyYXlzY2FsZTtcbiAgaGVpZ2h0OjEwMHZoO1xuICAvKiBtYXJnaW4tdG9wOiAtMTF2aDsgKi9cbn1cblxuY29kZSB7XG4gIGZvbnQtZmFtaWx5OiBzb3VyY2UtY29kZS1wcm8sIE1lbmxvLCBNb25hY28sIENvbnNvbGFzLCAnQ291cmllciBOZXcnLFxuICAgIG1vbm9zcGFjZTtcbn1cblxuaHRtbCwgYm9keSwgI3Jvb3QsIC5BcHAge1xuICBoZWlnaHQ6IDEwMCU7XG59Il0sInNvdXJjZVJvb3QiOiIifQ== */</style><style>.App{
+  height:100vh;
+}
+/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIndlYnBhY2s6Ly9zcmMvQXBwLmNzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNFLFlBQVk7QUFDZCIsInNvdXJjZXNDb250ZW50IjpbIi5BcHB7XG4gIGhlaWdodDoxMDB2aDtcbn0iXSwic291cmNlUm9vdCI6IiJ9 */</style></head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"><div class="App"><div><div style="width: fit-content; position: absolute; top: 40vh; right: 10vw;"><div aria-label="Countdown timer" style="position: relative; width: 120px; height: 120px;"><svg width="120" height="120" xmlns="http://www.w3.org/2000/svg"><path d="m 60,3
+          a 57,57 0 1,0 0,114
+          a 57,57 0 1,0 0,-114" fill="none" stroke="#d9d9d9" stroke-width="6"></path><path d="m 60,3
+          a 57,57 0 1,0 0,114
+          a 57,57 0 1,0 0,-114" fill="none" stroke="rgba(33, 131, 128, 1)" stroke-linecap="round" stroke-width="6" stroke-dasharray="358.1415625092364" stroke-dashoffset="358.1415625092364"></path></svg><div aria-hidden="true" style="display: flex; justify-content: center; align-items: center; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; color: rgb(33, 131, 128);"><div class="time-wrapper"><div class="time">2</div><div>minutes</div></div></div></div></div><div><video autoplay="" id="videoElement" style="display: none;"></video><img style="background-color: grey; border-radius: 5px; height: 30vh; width: 25vw; margin-left: 72vw; margin-top: 4vh;"></div><div style="width: fit-content; margin: -30vh auto auto;"><h1>7 Wonders of the World</h1><form action="" id="quiz" method="POST"><ol><li>Where is <u>Petra</u> located?</li><div class="form-check"><input class="form-check-input" type="radio" name="Petra" id="flexRadioDefault1" value="Jerash">Jerash</div><div class="form-check"><input class="form-check-input" type="radio" name="Petra" id="flexRadioDefault1" value="Zarqa">Zarqa</div><div class="form-check"><input class="form-check-input" type="radio" name="Petra" id="flexRadioDefault1" value="Ma'an Governorate">Ma'an Governorate</div><div class="form-check"><input class="form-check-input" type="radio" name="Petra" id="flexRadioDefault1" value="Amman">Amman</div><li>Where is <u>Colosseum</u> located?</li><div class="form-check"><input class="form-check-input" type="radio" name="Colosseum" id="flexRadioDefault1" value="Bologna">Bologna</div><div class="form-check"><input class="form-check-input" type="radio" name="Colosseum" id="flexRadioDefault1" value="Milan">Milan</div><div class="form-check"><input class="form-check-input" type="radio" name="Colosseum" id="flexRadioDefault1" value="Rome">Rome</div><div class="form-check"><input class="form-check-input" type="radio" name="Colosseum" id="flexRadioDefault1" value="Bari">Bari</div><li>Where is <u>Great Wall of China</u> located?</li><div class="form-check"><input class="form-check-input" type="radio" name="Great Wall of China" id="flexRadioDefault1" value="China">China</div><div class="form-check"><input class="form-check-input" type="radio" name="Great Wall of China" id="flexRadioDefault1" value="Beijing">Beijing</div><div class="form-check"><input class="form-check-input" type="radio" name="Great Wall of China" id="flexRadioDefault1" value="Shanghai">Shanghai</div><div class="form-check"><input class="form-check-input" type="radio" name="Great Wall of China" id="flexRadioDefault1" value="Tianjin">Tianjin</div><li>Where is <u>Taj Mahal</u> located?</li><div class="form-check"><input class="form-check-input" type="radio" name="Taj Mahal" id="flexRadioDefault1" value="Mumbai">Mumbai</div><div class="form-check"><input class="form-check-input" type="radio" name="Taj Mahal" id="flexRadioDefault1" value="Agra">Agra</div><div class="form-check"><input class="form-check-input" type="radio" name="Taj Mahal" id="flexRadioDefault1" value="New Delhi">New Delhi</div><div class="form-check"><input class="form-check-input" type="radio" name="Taj Mahal" id="flexRadioDefault1" value="Chennai">Chennai</div><li>Where is <u>Egypt Pyramids</u> located?</li><div class="form-check"><input class="form-check-input" type="radio" name="Egypt Pyramids" id="flexRadioDefault1" value="Suez">Suez</div><div class="form-check"><input class="form-check-input" type="radio" name="Egypt Pyramids" id="flexRadioDefault1" value="Tanta">Tanta</div><div class="form-check"><input class="form-check-input" type="radio" name="Egypt Pyramids" id="flexRadioDefault1" value="Luxor">Luxor</div><div class="form-check"><input class="form-check-input" type="radio" name="Egypt Pyramids" id="flexRadioDefault1" value="Giza">Giza</div><li>Where is <u>Christ the Redeemer</u> located?</li><div class="form-check"><input class="form-check-input" type="radio" name="Christ the Redeemer" id="flexRadioDefault1" value="Olinda">Olinda</div><div class="form-check"><input class="form-check-input" type="radio" name="Christ the Redeemer" id="flexRadioDefault1" value="Natal">Natal</div><div class="form-check"><input class="form-check-input" type="radio" name="Christ the Redeemer" id="flexRadioDefault1" value="Rio de Janeiro">Rio de Janeiro</div><div class="form-check"><input class="form-check-input" type="radio" name="Christ the Redeemer" id="flexRadioDefault1" value="Betim">Betim</div><li>Where is <u>Machu Picchu</u> located?</li><div class="form-check"><input class="form-check-input" type="radio" name="Machu Picchu" id="flexRadioDefault1" value="Lima">Lima</div><div class="form-check"><input class="form-check-input" type="radio" name="Machu Picchu" id="flexRadioDefault1" value="Piura">Piura</div><div class="form-check"><input class="form-check-input" type="radio" name="Machu Picchu" id="flexRadioDefault1" value="Tacna">Tacna</div><div class="form-check"><input class="form-check-input" type="radio" name="Machu Picchu" id="flexRadioDefault1" value="Cuzco Region">Cuzco Region</div></ol></form></div><button type="button" class="btn btn-success" style="margin: auto auto 2vh; display: block;">Submit Test</button></div></div></div>
+  <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+<script src="/static/js/bundle.js"></script><script src="/static/js/vendors~main.chunk.js"></script><script src="/static/js/main.chunk.js"></script>
+<script>
+  window.src= "{{ url_for('calibration') }}"
+</script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script><div id="__react-alert__"></div>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.1/js/bootstrap.min.js" integrity="sha384-XEerZL0cuoUbHE4nZReLT7nx9gQrQreJekYhJD9WNWhH8nEW+0c5qq7aIo2Wl30J" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react/umd/react.production.min.js" crossorigin=""></script>
+
+</body></html>

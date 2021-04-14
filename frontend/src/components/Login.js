@@ -48,7 +48,7 @@ class Login extends Component {
                     this.props.alert.show('Successfully Logged in !!');
                     console.log(this.props)
                     // this.setState({HistoryProvider:true})
-                    window.location.href="/instructions"
+                    this.props.setInstructions(true);
                     // this.props.history.push('/instructions')
                 }
                 else if(res.status === 400){

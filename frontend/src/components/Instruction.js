@@ -10,7 +10,7 @@ export default class Instruction extends Component {
     }
     handleSubmit(){
         if(this.state.accepted === true){
-            window.location.href='/calibration';
+            this.props.setCalibration(true);
         }
         else{
             alert('accept the instructions');
