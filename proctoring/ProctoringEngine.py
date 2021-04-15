@@ -235,7 +235,7 @@ class Proctor:
                     print(che)
                     self.animate(che, self.q)
                     self.q = self.q+1
-                if self.STATE == 'TEST_INPROCESS':
+                if self.STATE == 'TEST_INPROCESS' and (che>0.2 or che<-0.2):
                     self.CHEAT = True
                 return s
             else:

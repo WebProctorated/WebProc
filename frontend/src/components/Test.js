@@ -7,7 +7,8 @@ class Test extends Component {
         super(props);
         this.state={
             stream:undefined,
-            socket:null
+            socket:null,
+            isPlaying:false
         }
         this.startTest = this.startTest.bind(this);
         this.sendSnapshot = this.sendSnapshot.bind(this);
@@ -61,67 +62,7 @@ class Test extends Component {
     startTest(){
         document.getElementById('test_window').setAttribute('src',window.test_src);
         window.test_src=null;
-        // setInterval(()=>{
-        //     fetch('http://localhost:5000/msg')
-        //     .then(res=>{
-        //         console.log(res);
-        //         return res.json();
-        //     }).then(data=>console.log(data));
-        // },100
-        // )
-        // if(this.state.socket === null){
-        //     this.state.socket = window.io.connect( window.location.protocol + '//' + document.domain + ':' + '5000' + "/test", {
-        //     reconnection: true,
-        //     reconnectionDelay: 1000,
-        //     reconnectionDelayMax : 5000,
-        //     reconnectionAttempts: Infinity})
-        // }
-
-        // console.log(this.state.socket)
-        // let video = document.querySelector("#videoElement");
-        // var localMediaStream = null;
-        // var constraints = {
-        //     video: {
-        //         width: { max: 640 },
-        //         height: { max: 480 }
-        //     }
-        // };
-        // navigator.mediaDevices.getUserMedia(constraints).then((stream)=>{
-        //     video.srcObject = stream;
-        //     localMediaStream = stream;
-        //     var self = this;
-        //     // let sendSnapshot = this.sendSnapshot
-        //     let id = setInterval(()=>{
-        //         if(this.state.socket === null)
-        //             clearInterval(id);
-        //         self.sendSnapshot();
-        //     }, 1000/16);
-        // }).catch((error)=>{
-        //     console.log(error);
-        // });
-
-        // this.state.socket.on('msg',(data)=>{
-        //     console.log(data);
-        //     if(data.error === true)
-        //     {
-        //         // setMessage('error: '+data.msg,this.props.alert);
-        //         this.props.alert.removeAll();
-        //         this.props.alert.show('error: '+data.msg)
-        //     }
-        //     else
-        //     {
-        //         // setMessage(data.msg,this.props.alert);
-        //         this.props.alert.removeAll();
-        //         this.props.alert.show(data.msg)
-        //     }
-        // })
-        // this.state.socket.on('connect',()=>console.log('connected'))
-        // this.state.socket.on('disconnect', ()=> {
-        //     console.log('disconnected')
-        //     this.state.socket.destroy();
-        //     delete this.state.socket;
-        //     this.state.socket = null;
-        //     } );
+        this.setState({isPlaying:true})
 
     }
     render() {
@@ -133,7 +74,7 @@ class Test extends Component {
           const renderTime = (dimension, time) => {
             return (
               <div className="time-wrapper">
-                <div className="time">{time}</div>
+                <div className="time" style={{ textAlign: 'center' }}>{time}</div>
                 <div>{dimension}</div>
               </div>
             );
@@ -144,13 +85,15 @@ class Test extends Component {
                 <div style={{ width: 'fit-content',position: 'absolute',top: '40vh', right: '10vw'}}>
                     <CountdownCircleTimer
                         {...timerProps}
+                        isPlaying={this.state.isPlaying}
+                        key={this.state.isPlaying}
                         colors={[["#218380"]]}
                         duration={2*60}
-                        initialRemainingTime={2*60}
-                        onComplete={(totalElapsedTime) => console.log('time up')}
+                        initialRemainingTime={this.state.isPlaying === false ? 2*60 : 2*60}
+                        onComplete={(totalElapsedTime) => { console.log('time up'); this.setState({ isPlaying: false }) }}
                     >
                         {({ elapsedTime }) =>
-                        renderTime("minutes", getTimeSeconds(elapsedTime))
+                            renderTime("minutes", getTimeSeconds(elapsedTime))
                         }
                     </CountdownCircleTimer>
                 </div>

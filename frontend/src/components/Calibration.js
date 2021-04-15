@@ -9,121 +9,45 @@ class Calibration extends Component {
             stream: undefined,
             socket: null,
             isPlaying: false,
-            key: 0
+            key: 0,
+            id:undefined
         }
         this.handleClick = this.handleClick.bind(this);
-        this.sendSnapshot = this.sendSnapshot.bind(this);
     }
 
     componentDidMount() {
-        // this.setState({ socket: window.io.connect(window.location.protocol + '//' + document.domain + ':' + '5000' + "/test") });
+        document.getElementById('photo').setAttribute('src',window.src);
+       window.src = null;
+       var id = setInterval(()=>{
+            fetch('http://localhost:5000/msg')
+            .then(res=>{
+                console.log(res);
+                return res.json();
+            }).then(data=>{
+                console.log(data);
+                if(data !== '')
+                    this.props.alert.show(data);
+            });
+        },500
+        )
+        this.setState({id:id});
     }
 
-    sendSnapshot() {
-        // let video = document.querySelector("#videoElement");
-        // let canvas = document.querySelector("#canvasElement");
-        // let ctx = canvas.getContext('2d');
-
-        // ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, 300, 150);
-
-        // let dataURL = canvas.toDataURL('image/jpeg');
-        if (this.state.socket !== null) {
-            this.state.socket.emit('calibrate', {});
-
-            // this.state.socket.emit('output image')
-            // fetch('http://localhost:5000/calibration', {
-            //     method: 'GET',
-            //     headers: { 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,/;q=0.8' }
-            // }).then(data => {
-            //     console.log(data)
-            //     var photo = document.getElementById('photo')
-            //     photo.setAttribute('src', data.body)
-            //     // return data.body.text()
-            // })
-            //     .then(res => console.log(res))
-            this.state.socket.on('out-image-event', (data) => {
-                this.setState({ isPlaying: true })
-                this.setState({ key: this.state.key + 1 })
-                // console.log(data)
-            });
-        }
+    componentWillUnmount(){
+        if(this.state.id)
+            clearInterval(this.state.id);
     }
 
     handleClick() {
-       document.getElementById('photo').setAttribute('src',window.src);
-       window.src = null;
-    //    var id = setInterval(()=>{
-    //         fetch('http://localhost:5000/msg')
-    //         .then(res=>{
-    //             console.log(res);
-    //             return res.json();
-    //         }).then(data=>{
-    //             console.log(data);
-    //             clearInterval(id);
-    //         });
-    //     },100
-    //     )
-        // if (this.state.socket === null) {
-        //     this.state.socket = window.io.connect(window.location.protocol + '//' + document.domain + ':' + '5000' + "/test", {
-        //         reconnection: true,
-        //         reconnectionDelay: 1000,
-        //         reconnectionDelayMax: 5000,
-        //         reconnectionAttempts: Infinity
-        //     })
-        // }
-
-        // console.log(this.state.socket)
-        // let video = document.querySelector("#videoElement");
-        // var localMediaStream = null;
-        // var constraints = {
-        //     video: {
-        //         width: { max: 640 },
-        //         height: { max: 480 }
-        //     }
-        // };
-        // var self = this;
-        // let sendSnapshot = this.sendSnapshot
-        // let id = setInterval(() => {
-        //     if (this.state.socket === null)
-        //         clearInterval(id);
-        //     self.sendSnapshot();
-        // }, 1000 / 5);
-        // navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
-        //     // video.srcObject = stream;
-        //     // localMediaStream = stream;
-
-        // }).catch((error) => {
-        //     console.log(error);
-        // });
-
-        // this.state.socket.on('msg', (data) => {
-        //     console.log(data);
-        //     if (data.error === true) {
-        //         // setMessage('error: '+data.msg,this.props.alert);
-        //         this.props.alert.removeAll();
-        //         this.props.alert.show('error: ' + data.msg)
-        //     }
-        //     else {
-        //         // setMessage(data.msg,this.props.alert);
-        //         this.props.alert.removeAll();
-        //         this.props.alert.show(data.msg)
-        //     }
-        // })
-        // this.state.socket.on('connect', () => console.log('connected'))
-        // this.state.socket.on('disconnect', () => {
-        //     console.log('disconnected')
-        //     if (this.state.socket !== null) {
-        //         this.state.socket.destroy();
-        //         delete this.state.socket;
-        //         this.setState({ socket: null })
-        //     }
-        // });
-
+       fetch('http://localhost:5000/start_cal')
+       .then(res=>{
+           this.setState({isPlaying:true})
+       })
+       .catch(err=>console.log(err))
     }
     render() {
         const minuteSeconds = 60;
         const timerProps = {
-            isPlaying: this.state.isPlaying,
             size: 120,
             strokeWidth: 6
         };
@@ -141,7 +65,8 @@ class Calibration extends Component {
                 <div style={{ width: 'fit-content', position: 'absolute', top: '16vh', right: '3vw' }}>
                     <CountdownCircleTimer
                         {...timerProps}
-                        key={this.state.key}
+                        isPlaying={this.state.isPlaying}
+                        key={this.state.isPlaying}
                         colors={[["#218380"]]}
                         duration={10}
                         initialRemainingTime={this.state.isPlaying === false ? 10 : 10}
