@@ -6,6 +6,7 @@ import Login from './components/Login';
 import Instruction from './components/Instruction';
 import Calibration from './components/Calibration';
 import Test from './components/Test';
+import Report from './components/Report';
 
 class App extends React.Component{
   constructor(props){
@@ -15,7 +16,8 @@ class App extends React.Component{
       login:true,
       instructions:false,
       calibration:false,
-      test:false
+      test:false,
+      report:false
     }
     this.setMessage = this.setMessage.bind(this)
   }
@@ -29,7 +31,8 @@ class App extends React.Component{
          <Login setInstructions={(val)=>this.setState({instructions:val,login:false})}/>:this.state.instructions?
          <Instruction setCalibration={(val)=>this.setState({calibration:val,instructions:false})}/>:this.state.calibration?
          <Calibration setTest={(val)=>this.setState({test:val,calibration:false})}/>:this.state.test?
-        <Test/>:''
+        <Test setReport={(val)=>this.setState({report:val,test:false})}/>:this.state.report?
+        <Report/>:''
         }
         {/* <Message msg={this.state.msg} setMessage={this.setMessage}/>
         <Login setMessage={this.setMessage}/> */}

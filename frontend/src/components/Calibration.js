@@ -21,12 +21,12 @@ class Calibration extends Component {
        var id = setInterval(()=>{
             fetch('http://localhost:5000/msg')
             .then(res=>{
-                console.log(res);
                 return res.json();
             }).then(data=>{
-                console.log(data);
                 if(data !== '')
                     this.props.alert.show(data);
+                if(data === 'All Is Fine!! Good to Go!')
+                    this.props.setTest(true);
             });
         },500
         )
@@ -83,7 +83,6 @@ class Calibration extends Component {
                     <img id="photo" style={{ borderRadius: '5px', height: '70vh', width: '70vw', margin: '5vh 15vw' }} /></div>
                 <div style={{ margin: 'auto', width: '25vw', display: 'flex', justifyContent: 'space-between' }}>
                     <button type="button" className="btn btn-info" onClick={() => this.handleClick()}>Start for Calibration</button>
-                    <button type="button" className="btn btn-success" onClick={() => { this.props.setTest(true) }}>Take Test</button>
                 </div>
             </div>
         )

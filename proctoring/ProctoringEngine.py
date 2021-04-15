@@ -149,6 +149,9 @@ class Proctor:
         # self.i += 1
         if self.TAB_CHANGE == True:
             self.TAB_CHANGE = False
+            che = 1
+            self.animate(che, self.q)
+            self.q = self.q+1
             return 1
         try:
             if nfaces != 0:

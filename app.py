@@ -20,60 +20,37 @@ import sys
 import cv2
 import os
 import time
-
-# template_dir = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-# template_dir = os.path.join(template_dir, 'frontend/public')
-# template_dir = os.path.join(template_dir, 'templates')
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 app = Flask(__name__)
 
-# Payload.max_decode_packets = 500
-# socketio = SocketIO(app, cors_allowed_origins="*")
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.secret_key = 'super secret key'
 app.config['SESSION_TYPE'] = 'filesystem'
 
 proctor = Proctor()
-# print('//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////', proctor.get_frame())
 scheduler = BackgroundScheduler()
 scheduler.start()
 
 stop_thread = False
-
-# @app.route('/', defaults={'path': ''})
-# @app.route('/<path:path>')
-# def catch_all(path):
-#     return 'You want path: %s' % path
-
 
 @app.route('/')
 @cross_origin()
 def home():
     return render_template('index.html')
 
-# @app.route('/instructions')
-# @cross_origin()
-# def instructions():
-#     return render_template('instructions.html')
+@app.route('/cheat',methods=['POST'])
+@cross_origin()
+def cheat():
+    global msg_q
+    if proctor.STATE == TEST_INPROCESS:
+        proctor.CHEAT = True
+        proctor.TAB_CHANGE = True
+        msg_q.append('Cheating Detected!!')
 
-# @app.route('/calibration')
-# @cross_origin()
-# def calibration_template():
-#     return render_template('calibration.html')
-
-# @app.route('/test')
-# @cross_origin()
-# def test():
-#     return render_template('test.html')
-
-# @app.route('/cheat',methods=['POST'])
-# @cross_origin()
-# def cheat():
-#     if proctor.STATE == TEST_INPROCESS:
-#         proctor.CHEAT = True
-#         proctor.TAB_CHANGE = True
-#     return Response(status=201)
+    return Response(status=201)
 
 
 @app.route('/login', methods=['POST'])
@@ -127,6 +104,7 @@ def proctor_task(camera):
             proctor.STATE == 'TERMINATE'
 
         if proctor.STATE == 'TEST_DONE':
+            msg_q.append('Test Done!!')
             proctor.save_graph()
             proctor.STATE == 'TERMINATE'
             print('Test Done!!')
@@ -208,7 +186,7 @@ start_proctoring = False
 
 def stream(camera):
     global frame, start_proctoring, msg_q
-    while start_proctoring == True:
+    while True:
         # get camera frame
         # time.sleep(0.03) #30fps
 
@@ -234,7 +212,7 @@ def calibration_route():
     #     t1 = Thread(target=calibration_task, args=(proctor,), daemon=True)
     #     t1.start()
 
-    start_proctoring = True
+    # start_proctoring = True
     return Response(stream(proctor),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -248,11 +226,9 @@ def start_cal():
 def get_msg():
     global msg_q
     while True:
-        print(msg_q)
         if len(msg_q) != 0:
             m = msg_q.pop(0)
             # yield json.dumps(m)
-            print(m)
             yield json.dumps(m)
         else:
             yield json.dumps('')
@@ -282,6 +258,28 @@ def proctor_route():
     return Response(stream(proctor), status=201,
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
+@app.route('/stop_test')
+@cross_origin()
+def stop_test():
+    proctor.STATE = 'TEST_DONE'
+    return Response(status=201)
+
+@app.route('/plot.png')
+def plot_png():
+    fig = create_figure()
+    output = io.BytesIO()
+    FigureCanvas(fig).print_png(output)
+    return Response(output.getvalue(), mimetype='image/png')
+
+def create_figure():
+    fig = Figure()
+    axis = fig.add_subplot(1, 1, 1)
+    xvals = np.loadtxt('xvals.txt',dtype=float)
+    yvals = np.loadtxt('yvals.txt',dtype=float)
+    axis.plot(xvals, yvals)
+    axis.axhline(y=0.2, color='r', linestyle='-')
+    axis.axhline(y=-0.2, color='r', linestyle='-')
+    return fig
 
 def set_user_orient_calibration_done():
     print('inside thread1: ', datetime.now())

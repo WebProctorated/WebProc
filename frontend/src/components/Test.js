@@ -2,50 +2,50 @@ import React, { Component } from 'react';
 import { withAlert } from 'react-alert';
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 
+function watchVisibility(){
+    document.title = document.visibilityState;
+    if(document.visibilityState == "hidden"){
+    //show alert message
+    window.alert("don't switch the tab, it will treated as cheating behaviour\n ");
+    window.CHEAT = true;
+    console.log(document.visibilityState);}
+}
+
+function windowSizeChange(e){
+    window.alert("don't minimize the window, it will treated as cheating behaviour\n ");
+    window.CHEAT = true;
+    console.log('resize: ',e)
+}
+
 class Test extends Component {
     constructor(props){
         super(props);
         this.state={
             stream:undefined,
             socket:null,
-            isPlaying:false
+            isPlaying:false,
+            id:undefined
         }
         this.startTest = this.startTest.bind(this);
         this.sendSnapshot = this.sendSnapshot.bind(this);
+        this.handleClick = this.handleClick.bind(this);
     }
 
     componentDidMount(){
         //js to restrict user to open only one tab.
-        document.addEventListener('visibilitychange', ()=>{
-          document.title = document.visibilityState;
-          if(document.visibilityState == "hidden"){
-            //show alert message
-            window.alert("don't switch the tab, it will treated as cheating behaviour\n ");
-            window.CHEAT = true;
-            console.log(document.visibilityState);}
-          });
-          window.addEventListener('resize',(e)=>{
-            window.alert("don't minimize the window, it will treated as cheating behaviour\n ");
-            window.CHEAT = true;
-            console.log('resize: ',e)
-          })
-          this.startTest()
+        document.addEventListener('visibilitychange', watchVisibility);
+        window.addEventListener('resize',windowSizeChange);
+        this.startTest();
       }
 
+    componentWillUnmount(){
+        if(this.state.id)
+            clearInterval(this.state.id);
+        document.removeEventListener('visibilitychange',watchVisibility);
+        window.removeEventListener('resize',windowSizeChange);
+    }
+
     sendSnapshot(){
-        // let video = document.querySelector("#videoElement");
-        // let canvas = document.querySelector("#canvasElement");
-        // let ctx = canvas.getContext('2d');
-
-        // ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, 300, 150);
-
-        // let dataURL = canvas.toDataURL('image/jpeg');
-        // if(this.state.socket !== null){
-        //     this.state.socket.emit('proctor',{} );
-        //     this.state.socket.on('out-image-event', (data)=> {
-        //         console.log(data)
-        //     });
-        // }
         if(window.CHEAT === true){
             fetch('http://localhost:5000/cheat',{
                 method:'POST',
@@ -62,8 +62,26 @@ class Test extends Component {
     startTest(){
         document.getElementById('test_window').setAttribute('src',window.test_src);
         window.test_src=null;
-        this.setState({isPlaying:true})
+        this.setState({isPlaying:true});
+        var id = setInterval(()=>{
+            fetch('http://localhost:5000/msg')
+            .then(res=>{
+                return res.json();
+            }).then(data=>{
+                if(data !== '')
+                    this.props.alert.show(data);
+                if(data === 'Test Done!!')
+                    this.props.setReport(true);
+            });
+        },500
+        )
 
+        this.setState({id:id});
+
+    }
+    handleClick(){
+        fetch('http://localhost:5000/stop_test')
+        .catch(err=>console.log(err))
     }
     render() {
         const timerProps = {
