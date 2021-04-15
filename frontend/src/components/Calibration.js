@@ -51,14 +51,18 @@ class Calibration extends Component {
 
     handleClick() {
        document.getElementById('photo').setAttribute('src',window.src);
-       setInterval(()=>{
-            fetch('http://localhost:5000/msg')
-            .then(res=>{
-                console.log(res);
-                return res.json();
-            }).then(data=>console.log(data));
-        },100
-        )
+       window.src = null;
+    //    var id = setInterval(()=>{
+    //         fetch('http://localhost:5000/msg')
+    //         .then(res=>{
+    //             console.log(res);
+    //             return res.json();
+    //         }).then(data=>{
+    //             console.log(data);
+    //             clearInterval(id);
+    //         });
+    //     },100
+    //     )
         // if (this.state.socket === null) {
         //     this.state.socket = window.io.connect(window.location.protocol + '//' + document.domain + ':' + '5000' + "/test", {
         //         reconnection: true,

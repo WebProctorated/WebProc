@@ -101,26 +101,27 @@ frame = None
 
 
 def proctor_task(camera):
-    global msg_q, proctor, stop_thread, start_proctoring, frame
+    global msg_q, proctor, stop_thread, start_proctoring, frame,scheduler
     t = 0
     while proctor.STATE != 'TERMINATE':
         # if len(frame_q) == 0:
         #     continue
+        # time.sleep(0.16)
         if frame is None:
             # get camera frame
             # frame = camera.get_frame()
             continue
-        elapsed_time = time.time()
-        if elapsed_time - t >= 120 and elapsed_time - t < 140:
-            proctor.STATE = 'TEST_DONE'
-        print(elapsed_time-t)
+        # elapsed_time = time.time()
+        # if elapsed_time - t >= 120 and elapsed_time - t < 140:
+        #     proctor.STATE = 'TEST_DONE'
+        # print(elapsed_time-t)
         try:
             if proctor.STATE == 'START_TEST':
                 proctor.STATE = 'TEST_INPROCESS'
                 proctor.reset_plot_values()  # to clear the values accumulated while calibrations
-                # scheduler.add_job(func=set_start_test, trigger='date',
-                #                   run_date=datetime.now()+timedelta(minutes=1), args=[])
-                t = time.time()
+                scheduler.add_job(func=set_start_test, trigger='date',
+                                  run_date=datetime.now()+timedelta(minutes=1), args=[])
+                # t = time.time()
                 proctor.predict(frame)
 
             if proctor.STATE == 'TEST_INPROCESS':
@@ -146,10 +147,10 @@ def calibration_task(camera):
             # frame = camera.get_frame()
             continue
 
-        elapsed_time = time.time()
-        if elapsed_time - t >= 10 and elapsed_time - t < 20:
-            proctor.STATE = 'CALIBRATE_USER_ORIENT_DONE'
-        print(elapsed_time-t)
+        # elapsed_time = time.time()
+        # if elapsed_time - t >= 10 and elapsed_time - t < 20:
+        #     proctor.STATE = 'CALIBRATE_USER_ORIENT_DONE'
+        # print(elapsed_time-t)
 
         print(proctor.STATE)
         if proctor.STATE == 'CHECK_ROOM_INTENSITY':
@@ -174,8 +175,8 @@ def calibration_task(camera):
         try:
             # caliberating user orientaion
             if proctor.STATE == 'CALIBRATE_USER_ORIENT':
-                # scheduler.add_job(func=set_user_orient_calibration_done, trigger='date',
-                #                   run_date=datetime.now()+timedelta(seconds=10), args=[])
+                scheduler.add_job(func=set_user_orient_calibration_done, trigger='date',
+                                  run_date=datetime.now()+timedelta(seconds=10), args=[])
                 t = time.time()
                 app.config['SCHEDULAR_STARTED'] = True
                 proctor.calibrating_user_orientation(frame)
@@ -219,7 +220,7 @@ def stream(camera):
     global frame, start_proctoring, msg_q
     while start_proctoring == True:
         # get camera frame
-        time.sleep(0.03) #30fps
+        # time.sleep(0.03) #30fps
 
         flag,frame = camera.get_frame()
         if not flag:
@@ -229,15 +230,17 @@ def stream(camera):
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + stream_frame + b'\r\n\r\n')
 
-
+t1 = None
 @app.route('/calibration_route')
 @cross_origin()
 def calibration_route():
-    global frame, stop_thread, start_proctoring
+    global frame, stop_thread, start_proctoring, t1
     # start the capture thread: reads frames from the camera (non-stop) and stores the result in img
     # a deamon thread is killed when the application exits
-    t = Thread(target=calibration_task, args=(proctor,), daemon=True)
-    t.start()
+    if t1 == None:
+        t1 = Thread(target=calibration_task, args=(proctor,), daemon=True)
+        t1.start()
+      
     start_proctoring = True
     return Response(stream(proctor),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -249,12 +252,15 @@ def get_msg():
         if len(msg_q) != 0:
             m = msg_q.pop(0)
             yield json.dumps(m)
+        else:
+            yield json.dumps({})
 
 
 @app.route('/msg')
 @cross_origin()
 def msg():
     return Response(get_msg(),mimetype='application/json',status=201)
+
 # @socketio.on('image')
 # @app.route('/calibration_route')
 # @cross_origin()
@@ -282,15 +288,17 @@ def msg():
 
     # emit('out-image-event','heartbeat msg') test_123
 
-
+t2 = None
 @app.route('/proctor_route')
 @cross_origin()
 def proctor_route():
-    global frame, stop_thread, start_proctoring, proctor
+    global frame, stop_thread, start_proctoring, t2
     # start the capture thread: reads frames from the camera (non-stop) and stores the result in img
     # a deamon thread is killed when the application exits
-    t = Thread(target=proctor_task, args=(proctor,), daemon=True)
-    t.start()
+    if t2 == None:
+        t2 = Thread(target=proctor_task, args=(proctor,), daemon=True)
+        t2.start()
+
     start_proctoring = True
     return Response(stream(proctor), status=201,
                     mimetype='multipart/x-mixed-replace; boundary=frame')

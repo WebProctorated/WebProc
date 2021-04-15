@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 class Proctor:
     def __init__(self):
-        #capturing video
+        # capturing video
         self.video = cv2.VideoCapture(0)
         self.face_model = get_face_detector()
         self.landmark_model = get_landmark_model()
@@ -45,19 +45,18 @@ class Proctor:
         self.CHEAT = False
         self.TAB_CHANGE = False
         # np.seterr(all='raise')
-        
-    
+
     def __del__(self):
-        #releasing camera
+        # releasing camera
         self.video.release()
 
     def get_frame(self):
         ret, frame = self.video.read()
-        return ret,frame
+        return ret, frame
 
     def animate(self, s, q):
-        self.xvals = np.append(self.xvals,q)
-        self.yvals = np.append(self.yvals,s)
+        self.xvals = np.append(self.xvals, q)
+        self.yvals = np.append(self.yvals, s)
 
     def get_2d_points(self, img, rotation_vector, translation_vector, camera_matrix, val):
         point_3d = []
@@ -95,7 +94,7 @@ class Proctor:
         front_depth = front_size*2
         val = [rear_size, rear_depth, front_size, front_depth]
         point_2d = self.get_2d_points(img, rotation_vector,
-                                 translation_vector, camera_matrix, val)
+                                      translation_vector, camera_matrix, val)
         y = (point_2d[5] + point_2d[8])//2
         x = point_2d[2]
 
@@ -128,8 +127,8 @@ class Proctor:
     def check_calibrated_user_orient(self):
         # after calibrating_user_orientation got run for 15 sec
         self.base = np.mean(self.orient)
-        print('base: ',self.base)
-        if self.base > 0.8:
+        print('base: ', self.base)
+        if self.base > 0.9:
             return False  # i.e. user hasn't been calibrated successfully
         return True
 
@@ -138,8 +137,8 @@ class Proctor:
         self.yvals = np.array([])
 
     def save_graph(self):
-        np.savetxt('xvals.txt',self.xvals,fmt="%f")
-        np.savetxt('yvals.txt',self.yvals,fmt='%f')
+        np.savetxt('xvals.txt', self.xvals, fmt="%f")
+        np.savetxt('yvals.txt', self.yvals, fmt='%f')
 
     def predict(self, frame):
         rects = find_faces(frame, self.face_model)
@@ -160,13 +159,17 @@ class Proctor:
                     cnt_inner = 0
                     image_points = np.array([marks[30],     # Nose tip
                                             marks[8],     # Chin
-                                            marks[36],     # Left eye left corner
-                                            marks[45],     # Right eye right corne
-                                            marks[48],     # Left Mouth corner
-                                            marks[54]      # Right mouth corner
-                                            ], dtype="double")
+                                            # Left eye left corner
+                                             marks[36],
+                                             # Right eye right corne
+                                             marks[45],
+                                             marks[48],     # Left Mouth corner
+                                             # Right mouth corner
+                                             marks[54]
+                                             ], dtype="double")
 
-                    dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
+                    # Assuming no lens distortion
+                    dist_coeffs = np.zeros((4, 1))
 
                     (success, rotation_vector, translation_vector) = cv2.solvePnP(
                         self.model_points, image_points, self.camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_UPNP)
@@ -176,11 +179,12 @@ class Proctor:
 
                     p1 = (int(image_points[0][0]), int(image_points[0][1]))
                     p2 = (int(nose_end_point2D[0][0][0]),
-                        int(nose_end_point2D[0][0][1]))
+                          int(nose_end_point2D[0][0][1]))
                     x1, x2 = self.head_pose_points(
                         frame, rotation_vector, translation_vector, self.camera_matrix)
 
-                    classIds, confs, bbox = self.net.detect(frame, confThreshold=self.thres)
+                    classIds, confs, bbox = self.net.detect(
+                        frame, confThreshold=self.thres)
                     # print(classIds,confs,bbox)
                     if len(classIds) != 0:
                         for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
@@ -212,14 +216,14 @@ class Proctor:
                     for i, (m1, m2) in enumerate(self.inner_points):
                         if self.d_inner[i] + 2 < marks[m2][1] - marks[m1][1]:
                             cnt_inner += 1
-                    cnt_inter = cnt_inner/3
+                    cnt_inner = cnt_inner/3
 
                     # print([nfaces,ang1,ang2,cnt_outer,cnt_inner,c])
                     x = pd.DataFrame(
                         np.array([nfaces, ang1, ang2, cnt_outer, cnt_inner, c]).reshape(1, -1))
                     # print(x)
                 #cv2.putText(img, 'Orient', (30, 30), font,1, (0, 255, 255), 2)
-                
+
                 s = final_predictor(x)
                 if c == 0:
                     che = s-self.base
@@ -235,9 +239,9 @@ class Proctor:
                     self.CHEAT = True
                 return s
             else:
-                return 1 # cheating behaviour
+                return 1  # cheating behaviour
         except Warning:
-            return 1 # cheating behaviour
+            return 1  # cheating behaviour
 
     def after_math(self):
         # after calibrate_user_lip_distannce

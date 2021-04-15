@@ -60,14 +60,15 @@ class Test extends Component {
 
     startTest(){
         document.getElementById('test_window').setAttribute('src',window.test_src);
-        setInterval(()=>{
-            fetch('http://localhost:5000/msg')
-            .then(res=>{
-                console.log(res);
-                return res.json();
-            }).then(data=>console.log(data));
-        },100
-        )
+        window.test_src=null;
+        // setInterval(()=>{
+        //     fetch('http://localhost:5000/msg')
+        //     .then(res=>{
+        //         console.log(res);
+        //         return res.json();
+        //     }).then(data=>console.log(data));
+        // },100
+        // )
         // if(this.state.socket === null){
         //     this.state.socket = window.io.connect( window.location.protocol + '//' + document.domain + ':' + '5000' + "/test", {
         //     reconnection: true,
