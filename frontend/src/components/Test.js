@@ -27,7 +27,6 @@ class Test extends Component {
             id:undefined
         }
         this.startTest = this.startTest.bind(this);
-        this.sendSnapshot = this.sendSnapshot.bind(this);
         this.handleClick = this.handleClick.bind(this);
     }
 
@@ -45,25 +44,22 @@ class Test extends Component {
         window.removeEventListener('resize',windowSizeChange);
     }
 
-    sendSnapshot(){
-        if(window.CHEAT === true){
-            fetch('http://localhost:5000/cheat',{
-                method:'POST',
-                headers:{
-                    'Content-Type': 'application/json',
-                    'Accept':'application/json'
-                },
-                body:JSON.stringify({CHEAT:true})
-            })
-            window.CHEAT = false;
-        }
-    }
-
     startTest(){
         document.getElementById('test_window').setAttribute('src',window.test_src);
         window.test_src=null;
         this.setState({isPlaying:true});
         var id = setInterval(()=>{
+            if(window.CHEAT === true){
+                fetch('http://localhost:5000/cheat',{
+                    method:'POST',
+                    headers:{
+                        'Content-Type': 'application/json',
+                        'Accept':'application/json'
+                    },
+                    body:JSON.stringify({CHEAT:true})
+                })
+                window.CHEAT = false;
+            }
             fetch('http://localhost:5000/msg')
             .then(res=>{
                 return res.json();
@@ -73,7 +69,7 @@ class Test extends Component {
                 if(data === 'Test Done!!')
                     this.props.setReport(true);
             });
-        },500
+        },2000
         )
 
         this.setState({id:id});

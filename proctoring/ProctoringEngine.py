@@ -38,6 +38,7 @@ class Proctor:
         self.net.setInputSwapRB(True)
         self.orient = []
         self.q = 1
+        self.cheat_counter=0
         self.xvals = np.array([])
         self.yvals = np.array([])
         self.base = 0
@@ -150,11 +151,12 @@ class Proctor:
         if self.TAB_CHANGE == True:
             self.TAB_CHANGE = False
             che = 1
+            self.cheat_counter+=5
             self.animate(che, self.q)
             self.q = self.q+1
             return 1
         try:
-            if nfaces != 0:
+            if nfaces == 1:
                 for face in rects:
                     marks = detect_marks(frame, self.landmark_model, face)
                     # mark_detector.draw_marks(img, marks, color=(0, 255, 0))
@@ -237,11 +239,13 @@ class Proctor:
                     che = 1
                     print(che)
                     self.animate(che, self.q)
+                    self.cheat_counter+=1
                     self.q = self.q+1
-                if self.STATE == 'TEST_INPROCESS' and (che>0.2 or che<-0.2):
-                    self.CHEAT = True
+                if self.STATE == 'TEST_INPROCESS' and (che>0.4 or che<-0.4):
+                    self.cheat_counter+=1
                 return s
             else:
+                self.cheat_counter+=1
                 return 1  # cheating behaviour
         except Warning:
             return 1  # cheating behaviour

@@ -10,40 +10,41 @@ class Calibration extends Component {
             socket: null,
             isPlaying: false,
             key: 0,
-            id:undefined
+            id: undefined
         }
         this.handleClick = this.handleClick.bind(this);
     }
 
     componentDidMount() {
-        document.getElementById('photo').setAttribute('src',window.src);
-       window.src = null;
-       var id = setInterval(()=>{
+        document.getElementById('photo').setAttribute('src', window.src);
+        window.src = null;
+        var id = setInterval(() => {
             fetch('http://localhost:5000/msg')
-            .then(res=>{
-                return res.json();
-            }).then(data=>{
-                if(data !== '')
-                    this.props.alert.show(data);
-                if(data === 'All Is Fine!! Good to Go!')
-                    this.props.setTest(true);
-            });
-        },500
+                .then(res => {
+                    return res.json();
+                }).then(data => {
+                    console.log(data);
+                    if (data !== '')
+                        this.props.alert.show(data);
+                    if (data === 'All Is Fine!! Good to Go!')
+                        this.props.setTest(true);
+                });
+        }, 500
         )
-        this.setState({id:id});
+        this.setState({ id: id });
     }
 
-    componentWillUnmount(){
-        if(this.state.id)
+    componentWillUnmount() {
+        if (this.state.id)
             clearInterval(this.state.id);
     }
 
     handleClick() {
-       fetch('http://localhost:5000/start_cal')
-       .then(res=>{
-           this.setState({isPlaying:true})
-       })
-       .catch(err=>console.log(err))
+        fetch('http://localhost:5000/start_cal')
+            .then(res => {
+                this.setState({ isPlaying: true, key:this.state.key + 1 })
+            })
+            .catch(err => console.log(err))
     }
     render() {
         const minuteSeconds = 60;
@@ -66,7 +67,7 @@ class Calibration extends Component {
                     <CountdownCircleTimer
                         {...timerProps}
                         isPlaying={this.state.isPlaying}
-                        key={this.state.isPlaying}
+                        key={this.state.key}
                         colors={[["#218380"]]}
                         duration={10}
                         initialRemainingTime={this.state.isPlaying === false ? 10 : 10}
@@ -81,9 +82,7 @@ class Calibration extends Component {
                     style={{ display: 'none' }}
                 ></video>
                     <img id="photo" style={{ borderRadius: '5px', height: '70vh', width: '70vw', margin: '5vh 15vw' }} /></div>
-                <div style={{ margin: 'auto', width: '25vw', display: 'flex', justifyContent: 'space-between' }}>
-                    <button type="button" className="btn btn-info" onClick={() => this.handleClick()}>Start for Calibration</button>
-                </div>
+                <button type="button" className="btn btn-info" style={{ display: 'block', margin: 'auto' }} onClick={() => this.handleClick()}>Start for Calibration</button>
             </div>
         )
     }

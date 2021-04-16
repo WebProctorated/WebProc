@@ -45,8 +45,7 @@ def home():
 @cross_origin()
 def cheat():
     global msg_q
-    if proctor.STATE == TEST_INPROCESS:
-        proctor.CHEAT = True
+    if proctor.STATE == 'TEST_INPROCESS':
         proctor.TAB_CHANGE = True
         msg_q.append('Cheating Detected!!')
 
@@ -80,20 +79,23 @@ frame = None
 def proctor_task(camera):
     global msg_q, proctor, stop_thread, start_proctoring, frame, scheduler
     t = 0
+    warn_for_cheat = 0 # maximum 3 warnings will be given
     while proctor.STATE != 'TERMINATE':
-        # if len(frame_q) == 0:
-        #     continue
+        if proctor.cheat_counter >= 15:
+            proctor.STATE = 'TEST_DONE'
+
+        if proctor.STATE == 'TEST_INPROCESS' and proctor.cheat_counter - 5*warn_for_cheat >= 5:
+            warn_for_cheat += 1
+            msg_q.append("Cheating Detected!!")
         # time.sleep(0.16)
         if frame is None:
-            # get camera frame
-            # frame = camera.get_frame()
             continue
         try:
             if proctor.STATE == 'START_TEST':
                 proctor.STATE = 'TEST_INPROCESS'
                 proctor.reset_plot_values()  # to clear the values accumulated while calibrations
                 scheduler.add_job(func=set_start_test, trigger='date',
-                                  run_date=datetime.now()+timedelta(minutes=1), args=[])
+                                  run_date=datetime.now()+timedelta(minutes=2), args=[])
                 # t = time.time()
                 proctor.predict(frame)
 
@@ -111,9 +113,10 @@ def proctor_task(camera):
             return
 
 
-def calibration_task():
+def calibration_task(camera):
     global msg_q, stop_thread, start_proctoring, frame, proctor, scheduler
     t = 0
+    msg_q = []
     while True:
         # time.sleep(0.16)
         if frame is None:
@@ -206,13 +209,6 @@ def stream(camera):
 @cross_origin()
 def calibration_route():
     global frame, stop_thread, start_proctoring, t1
-    # start the capture thread: reads frames from the camera (non-stop) and stores the result in img
-    # a deamon thread is killed when the application exits
-    # if t1 == None:
-    #     t1 = Thread(target=calibration_task, args=(proctor,), daemon=True)
-    #     t1.start()
-
-    # start_proctoring = True
     return Response(stream(proctor),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -220,7 +216,8 @@ def calibration_route():
 @app.route('/start_cal')
 @cross_origin()
 def start_cal():
-    calibration_task()
+    t1 = Thread(target=calibration_task, args=(proctor,), daemon=True)
+    t1.start()
     return Response(status=201)
 
 def get_msg():
@@ -234,6 +231,10 @@ def get_msg():
             yield json.dumps('')
     return
 
+@app.route('/getCheatCount')
+@cross_origin()
+def getCheatCount():
+    return Response(json.dumps({'count':proctor.cheat_counter}),status=201)
 
 @app.route('/msg')
 @cross_origin()
@@ -296,16 +297,20 @@ def set_start_test():
 if __name__ == "__main__":
     # con = sqlite3.connect("student.db")
     # print("Database opened successfully")
-    # # con.execute("DROP TABLE Student")
-    # # con.execute("DROP TABLE Questions")
-    # # con.execute("DROP TABLE Result")
+    # con.execute("DROP TABLE Student")
+    # con.execute("DROP TABLE Questions")
+    # con.execute("DROP TABLE Result")
     # con.execute("create table Student (enrollment_number VARCHAR[12] PRIMARY KEY , first_name TEXT NOT NULL, last_name TEXT NOT NULL, password VARCHAR[30] NOT NULL)")
     # con.execute("create table Questions (question_id INTEGER PRIMARY KEY AUTOINCREMENT, question TEXT NOT NULL, a TEXT NOT NULL, b TEXT NOT NULL, c TEXT NOT NULL, d TEXT NOT NULL, answer TEXT NOT NULL)")
     # con.execute("create table Result (enrollment_number VARCHAR[12] PRIMARY KEY , marks INTEGER NOT NULL) ")
     # print("Table created successfully")
 
     # cur = con.cursor()
-    # cur.execute("INSERT OR IGNORE into Student (enrollment_number,first_name, last_name, password) values (?,?,?,?)",('student_123','first_name','last_name','test_123'))
+    # cur.execute("INSERT OR IGNORE into Student (enrollment_number,first_name, last_name, password) values (?,?,?,?)",('cs171088','first_name','last_name','abcd'))
+    # cur.execute("INSERT OR IGNORE into Student (enrollment_number,first_name, last_name, password) values (?,?,?,?)",('cs171073','first_name','last_name','abcd'))
+    # cur.execute("INSERT OR IGNORE into Student (enrollment_number,first_name, last_name, password) values (?,?,?,?)",('cs171069','first_name','last_name','abcd'))
+    # cur.execute("INSERT OR IGNORE into Student (enrollment_number,first_name, last_name, password) values (?,?,?,?)",('cs171038','first_name','last_name','abcd'))
+    # cur.execute("INSERT OR IGNORE into Student (enrollment_number,first_name, last_name, password) values (?,?,?,?)",('cs171061','first_name','last_name','abcd'))
     # con.commit()
     # msg = "Employee successfully Added"
 
