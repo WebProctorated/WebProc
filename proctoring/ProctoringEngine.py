@@ -151,6 +151,7 @@ class Proctor:
         if self.TAB_CHANGE == True:
             self.TAB_CHANGE = False
             che = 1
+            print('tab_change')
             self.cheat_counter+=5
             self.animate(che, self.q)
             self.q = self.q+1
@@ -239,7 +240,7 @@ class Proctor:
                     che = 1
                     print(che)
                     self.animate(che, self.q)
-                    self.cheat_counter+=1
+                    # self.cheat_counter+=1
                     self.q = self.q+1
                 if self.STATE == 'TEST_INPROCESS' and (che>0.4 or che<-0.4):
                     self.cheat_counter+=1

@@ -23,13 +23,12 @@ class Calibration extends Component {
                 .then(res => {
                     return res.json();
                 }).then(data => {
-                    console.log(data);
                     if (data !== '')
                         this.props.alert.show(data);
                     if (data === 'All Is Fine!! Good to Go!')
                         this.props.setTest(true);
                 });
-        }, 500
+        }, 2000
         )
         this.setState({ id: id });
     }

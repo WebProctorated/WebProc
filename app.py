@@ -45,6 +45,7 @@ def home():
 @cross_origin()
 def cheat():
     global msg_q
+    print('cheat called')
     if proctor.STATE == 'TEST_INPROCESS':
         proctor.TAB_CHANGE = True
         msg_q.append('Cheating Detected!!')
@@ -95,7 +96,7 @@ def proctor_task(camera):
                 proctor.STATE = 'TEST_INPROCESS'
                 proctor.reset_plot_values()  # to clear the values accumulated while calibrations
                 scheduler.add_job(func=set_start_test, trigger='date',
-                                  run_date=datetime.now()+timedelta(minutes=2), args=[])
+                                  run_date=datetime.now()+timedelta(minutes=15), args=[])
                 # t = time.time()
                 proctor.predict(frame)
 
